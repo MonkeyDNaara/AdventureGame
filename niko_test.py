@@ -453,7 +453,7 @@ command = ""
 while command.lower() != "q":
     command = input("Direction: ")
     if command.lower() in maze.DirDict:
-        maze.move(command)
+        maze.check_action(command)
         maze.print_maze()
     elif command.lower() == "q":
         print("Game over!")
