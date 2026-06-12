@@ -445,8 +445,8 @@ first_maze = [
 
 
 maze = Maze(first_maze)
-
-maze.print_maze()
+vision_range = 2
+maze.show_vision_maze(vision_range)
 
 
 command = ""
@@ -454,7 +454,7 @@ while command.lower() != "q":
     command = input("Direction: ")
     if command.lower() in maze.DirDict:
         maze.check_action(command)
-        maze.print_maze()
+        maze.show_vision_maze(vision_range)
     elif command.lower() == "q":
         print("Game over!")
         break
