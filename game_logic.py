@@ -40,7 +40,9 @@ def create_player():
         "base_attack": 5,
         "weapon": None,
         "inventory": [],
-        "keys": []
+        "keys": [], 
+        "has_torch": False, 
+        "vision": 0
     }
 
 
@@ -123,6 +125,11 @@ def collect_item(player, item):
     elif item_type == "key":
         add_key(player, item["color"])
 
+    elif item_type == "torch":
+        player["has_torch"] = True
+        player["vision"] = 1
+        print("You picked up the torch.")
+        print("You can now the around you. What a relief.")
 
 def use_potion(player, potion_name):
     if potion_name not in player["inventory"]:
@@ -198,6 +205,9 @@ def handle_tile(player, tile):
         print("You found the exit.")
         print("You escaped the maze.")
         return "win"
+    
+    elif tile["type"] == "torch":
+        collect_item(player, tile)
 
     else:
         print("Unknown tile type.")
