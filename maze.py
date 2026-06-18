@@ -1,11 +1,12 @@
 class Maze:
-    def __init__(self, maze):
-        self.DirDict = {"up": (-1, 0), "down": (1, 0), "left": (0, -1), "right": (0, 1)}
+    def __init__(self, maze, vision_range):
+        self.DirDict = {"w": (-1, 0), "s": (1, 0), "a": (0, -1), "d": (0, 1)}
         self.player_symbol = "O"
         self.wall_symbol = "I"
         self.treasure_symbol = "X"
         self.boss_symbol = "B"
         self.maze = maze
+        self.vision_range = vision_range
 
     def check_position(self, array, symbol):
         for entry in array:
@@ -14,9 +15,9 @@ class Maze:
                 x = entry.index(symbol)
                 return (y, x)
 
-    def check_action(self, direction):
+    def check_action(self, event):
         actual_pos = self.check_position(self.maze, self.player_symbol)
-        move_dir = self.DirDict[direction]
+        move_dir = self.DirDict[event.keysym]
         target_pos = self.maze[actual_pos[0] + move_dir[0]][actual_pos[1] + move_dir[1]]
         if target_pos == self.wall_symbol:
             pass
@@ -29,6 +30,8 @@ class Maze:
             print("You won.")
         else:
             self.move(actual_pos, move_dir)
+        self.show_vision_maze(self.vision_range)
+        
 
     def move(self, actual_pos, move_dir):
         self.maze[actual_pos[0]][actual_pos[1]] = self.maze[
