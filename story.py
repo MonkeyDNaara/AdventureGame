@@ -1,34 +1,31 @@
 import sys
 import time
 
-def type_text(text, delay=0.03):
-    for char in text:
-        sys.stdout.write(char)
-        sys.stdout.flush()
-        time.sleep(delay)
-    print()
+# def type_text(text, delay=0.03):
+#     output_text = ""
+#     for char in text:
+#         # sys.stdout.write(char)
+#         # sys.stdout.flush()
+#         time.sleep(delay)
+#         output_text += char
+#     return output_text
 
 
 intro_text = """
 You wake up on a cold stone floor.
-You try to grasp where you are, but there's.. nothing.. you can't remember anything.
-
 The air is wet and water is dropping from the ceiling.
-You can't see it, but you hear the drops. 
-
-It's comeplety silent around you. You can hear your own breath. 
-Goosebumps spread all over your body.
-
-Your eyes need a moment to adjust to the darkness..
-Wait.. In the distance, a faint orange light flickers.
+You can't see anything, but you hear the drops.
 """
 
 room_texts = {
     ("main", 17, 1): """
+Your eyes need a moment to adjust to the darkness..
+Wait.. In the distance, a faint orange light flickers.""",
+    ("main", 16, 1): """
 Your hand touches a wall. Another wall answers on the other side.
 """,
-    ("main", 16, 1): """
-It's already getting a little bit lighter inront of you.
+    ("main", 15, 1): """
+It's already getting a little bit lighter in front of you.
 """,
     ("main", 11, 4): """
 Old scratches cover the floor.
@@ -44,15 +41,15 @@ You have found the way out.
 }
 
 
-def get_room_text(level_name, x, y):
-    key = (level_name, x, y)
+# def get_room_text(level_name, x, y):
+#     key = (level_name, x, y)
 
-    return room_texts.get(
-        key,
-        "The room is silent. The darkness seems to swallow every sound."
+#     return room_texts.get(
+#         key,
+#         "The room is silent. The darkness seems to swallow every sound."
         
-    )
+#     )
 
 
-def show_intro():
-    type_text(intro_text)
+# def show_intro():
+#     type_text(intro_text)
