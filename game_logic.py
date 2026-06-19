@@ -58,7 +58,7 @@ def create_player():
         "keys": [],
         "has_torch": False,
         "vision": 0,
-        "messages": [],
+        "messages": [],         #speichert Spielnachrichten, bis main.py sie auf dem Bildschirm ausgibt
     }
 
 
