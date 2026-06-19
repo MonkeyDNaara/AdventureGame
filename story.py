@@ -10,19 +10,30 @@ import time
 #         output_text += char
 #     return output_text
 
-story_texts = {"intro": """You wake up on a cold stone floor.
-The air is wet and water is dropping from the ceiling.
-You can't see anything, but you hear the drops.""",
-"part1": """Your eyes need a moment to adjust to the darkness..
-Wait.. In the distance, a faint orange light flickers.""",
-"part2": """Your hand touches a wall. Another wall answers on the other side.""",
-"part3": """It's already getting a little bit lighter in front of you.""",
-"part4": """Old scratches cover the floor.
-Something must have crossed this room many times.""",
-"part5": """You have found the way out.""",
-"part6": """The dark is restless here."""}
+story_texts = {
+    "intro":    "You wake up on a cold stone floor.\nThe air is wet and water is dropping from the ceiling.\nYou can't see anything, but you hear the drops.",
+    "part1":    "Your eyes need a moment to adjust to the darkness..\nWait.. In the distance, a faint orange light flickers.",
+    "part2":    "Your hand touches a wall. Another wall answers on the other side.",
+    "part3":    "It's already getting a little bit lighter in front of you.",
+    "part4":    "Old scratches cover the floor.\nSomething must have crossed this room many times.",
+    "part5":    "The dark is restless here.",
+    "torch_part":   "You picked up the torch.\nYou can now see around you. What a relief.",
+    "boss_part" :   "You defeated the amazed boss :o",
+    "exit_part" :   "You made it, You found the exit! Congrats!"
+}
 
-story_positions = {(18, 1): "intro", (17, 1): "part1", (16, 1): "part2", (15, 1): "part3", (11, 4): "part4", (17, 13): "part5", (19, 10): "part6"}
+story_positions = {
+    (18, 1): "intro", 
+    (17, 1): "part1", 
+    (16, 1): "part2", 
+    (15, 1): "part3", 
+    (11, 4): "part4", 
+    (10, 5): "part5",
+    (14, 1): "torch_part",
+    (18, 10): "boss_part",
+    (19, 10): "exit_part",
+    }
+
 
 
 
