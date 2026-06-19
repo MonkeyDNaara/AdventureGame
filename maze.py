@@ -1,6 +1,6 @@
 class Maze:
     def __init__(self, maze, vision_range):
-        self.DirDict = {"w": (-1, 0), "s": (1, 0), "a": (0, -1), "d": (0, 1)}
+        self.DirDict = {"w": (-1, 0), "s": (1, 0), "a": (0, -1), "d": (0, 1), " ": (0, 0)}
         self.player_symbol = "O"
         self.wall_symbol = "I"
         self.treasure_symbol = "X"
@@ -17,9 +17,9 @@ class Maze:
                 x = entry.index(symbol)
                 return (y, x)
 
-    def check_action(self, event):
+    def check_action(self, key = " "):
         actual_pos = self.check_position(self.maze, self.player_symbol)
-        move_dir = self.DirDict[event.keysym]
+        move_dir = self.DirDict[key]
         target_pos = self.maze[actual_pos[0] + move_dir[0]][actual_pos[1] + move_dir[1]]
         if target_pos == self.wall_symbol:
             pass
