@@ -1,116 +1,110 @@
-import contextlib
-import io
 import unittest
 
 from game_logic import (
     EMPTY_DOT,
     FULL_DOT,
-    calculate_incoming_damage,
     collect_item,
     consume_messages,
-    create_boss,
+    create_enemy,
     create_player,
-    fight,
-    format_combat_view,
-    format_encounter_prompt,
-    format_hp_dots,
+    format_inventory,
     format_status,
-    handle_tile,
+    get_attack,
+    make_dots,
+    potions,
+    use_potion,
+    weapons,
 )
 
 
 class GameLogicTests(unittest.TestCase):
-    def test_player_starts_without_torch_or_vision(self):
+    def test_player_start_values_are_simple(self):
         player = create_player()
 
-        self.assertFalse(player["has_torch"])
+        self.assertEqual(player["name"], "Nyrik")
+        self.assertEqual(player["level"], 1)
+        self.assertEqual(player["xp_to_next_level"], 10)
+        self.assertEqual(player["hp"], 30)
+        self.assertEqual(player["max_hp"], 30)
         self.assertEqual(player["vision"], 0)
 
-    def test_player_has_fixed_starting_stats(self):
-        player = create_player()
+    def test_weapons_and_potions_keep_known_values(self):
+        self.assertEqual(weapons["stick"]["attack_bonus"], 2)
+        self.assertEqual(weapons["rusty_sword"]["attack_bonus"], 4)
+        self.assertEqual(weapons["iron_sword"]["attack_bonus"], 7)
+        self.assertEqual(potions["small_potion"]["heal"], 10)
+        self.assertEqual(potions["big_potion"]["heal"], 20)
 
-        self.assertEqual(player["strength"], 5)
-        self.assertEqual(player["armor"], 1)
-        self.assertEqual(player["hp"], 60)
-        self.assertNotIn("unspent_stat_points", player)
-
-    def test_status_uses_hp_dots_and_xp_bar(self):
+    def test_status_has_level_xp_and_hp_with_dots(self):
         player = create_player()
-        player["hp"] = 30
+        player["xp"] = 5
+        player["hp"] = 15
+
         status = format_status(player)
 
-        self.assertIn("LVL   1", status)
-        self.assertIn("XP [", status)
-        self.assertIn("HP    30/60", status)
-        self.assertEqual(format_hp_dots(player), FULL_DOT * 5 + EMPTY_DOT * 5)
+        self.assertIn("LVL 1", status)
+        self.assertIn("XP  5/10", status)
+        self.assertIn("HP  15/30", status)
+        self.assertIn(FULL_DOT * 5 + EMPTY_DOT * 5, status)
 
-    def test_torch_expands_vision_and_adds_message(self):
+    def test_make_dots_uses_same_style_for_xp_and_hp(self):
+        self.assertEqual(make_dots(5, 10), FULL_DOT * 5 + EMPTY_DOT * 5)
+        self.assertEqual(make_dots(0, 10), EMPTY_DOT * 10)
+        self.assertEqual(make_dots(10, 10), FULL_DOT * 10)
+
+    def test_collect_torch_sets_vision(self):
         player = create_player()
+
         collect_item(player, {"type": "torch"})
 
         self.assertTrue(player["has_torch"])
-        self.assertGreater(player["vision"], 0)
+        self.assertEqual(player["vision"], 1)
         self.assertIn("torch", " ".join(consume_messages(player)).lower())
 
-    def test_armor_reduces_incoming_damage(self):
+    def test_collect_sword_changes_attack(self):
         player = create_player()
 
-        self.assertEqual(calculate_incoming_damage(player, 8), 7)
+        collect_item(player, {"type": "weapon", "name": "rusty_sword"})
 
-    def test_encounter_prompt_shows_enemy_stats_once(self):
-        prompt = format_encounter_prompt({
-            "name": "Shadow Creature",
-            "level": 1,
-            "hp": 20,
-            "max_hp": 20,
-            "strength": 5,
-        })
+        self.assertEqual(player["weapon"], "rusty_sword")
+        self.assertEqual(get_attack(player), 9)
 
-        self.assertIn("Enemy level: 1", prompt)
-        self.assertIn("HP: 20/20", prompt)
-        self.assertIn("STR: 5", prompt)
-
-    def test_combat_view_shows_monster_player_and_inventory(self):
-        player = create_player()
-        player["inventory"].append("big_potion")
-        boss = create_boss()
-        view = format_combat_view(player, boss)
-
-        self.assertIn("MONSTER", view)
-        self.assertIn("PLAYER", view)
-        self.assertIn("Small Potion: 0", view)
-        self.assertIn("Big Potion:   1", view)
-
-    def test_player_can_flee_before_fight_starts(self):
+    def test_collect_key_adds_key_to_player(self):
         player = create_player()
 
-        with contextlib.redirect_stdout(io.StringIO()):
-            outcome = handle_tile(
-                player,
-                {"type": "enemy", "enemy_level": 1},
-                input_func=lambda prompt: "flee",
-            )
+        collect_item(player, {"type": "key", "key": "x"})
 
-        self.assertEqual(outcome, "fled")
-        self.assertEqual(player["hp"], player["max_hp"])
+        self.assertIn("x", player["keys"])
 
-    def test_unprepared_player_can_die_against_boss(self):
+    def test_use_potion_outside_combat(self):
         player = create_player()
+        player["hp"] = 20
+        player["inventory"].append("small_potion")
 
-        with contextlib.redirect_stdout(io.StringIO()):
-            survived = fight(player, create_boss())
+        used = use_potion(player, "small_potion")
 
-        self.assertFalse(survived)
-        self.assertFalse(player["alive"])
+        self.assertTrue(used)
+        self.assertEqual(player["hp"], 30)
+        self.assertEqual(player["inventory"], [])
 
-    def test_winning_fight_logs_combined_xp_message(self):
+    def test_create_enemy_reads_fixed_enemy_values(self):
+        enemy = create_enemy(2)
+
+        self.assertEqual(enemy["level"], 2)
+        self.assertEqual(enemy["max_hp"], enemy["hp"])
+
+    def test_inventory_counts_potions_keys_and_weapon(self):
         player = create_player()
-        enemy = {"name": "Test", "level": 1, "hp": 1, "max_hp": 1, "strength": 1, "attack": 1, "xp_reward": 3}
+        player["inventory"] = ["small_potion", "big_potion", "big_potion"]
+        player["keys"] = ["x"]
+        player["weapon"] = "rusty_sword"
 
-        fight(player, enemy)
-        messages = consume_messages(player)
+        inventory_text = format_inventory(player)
 
-        self.assertIn("You won the fight! You gained 3 XP.", messages)
+        self.assertIn("Small Potion: 1", inventory_text)
+        self.assertIn("Big Potion:   2", inventory_text)
+        self.assertIn("Keys:         x", inventory_text)
+        self.assertIn("Old Rusty Sword", inventory_text)
 
 
 if __name__ == "__main__":

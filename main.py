@@ -1,6 +1,40 @@
 from gui import MainWindow
 
 
+TEXT_DELAY = 0.05       # wie schnell wird der Text "getippt"
+PARAGRAPH_PAUSE = 1.0   # Wartezeit nach jedem Absatz in Sekunden 
+
+def clear_screen():                         # Terminal leeren
+    print("\033[2J\033[H", end="")          # Cursor nach oben links setzen
+
+
+def show_instructions():
+    clear_screen()
+    print("Instructions")
+    print()
+    print("w  move up")
+    print("s  move down")
+    print("a  move left")
+    print("d  move right")
+    print("Space  pick up the item under your character")
+    print()
+    print("When an enemy blocks your way, choose fight or flee.")
+    input("\nPress Enter to return...")
+
+def show_start_menu():
+    while True:
+        clear_screen()
+        print("Welcome to (Spielname)")
+        print()
+        print('Press "i" for Instructions')
+        print("Press Enter to start the game")
+        choice = input("> ").lower() 
+
+        if choice == "i":
+            show_instructions()
+        elif choice == "":          # "" == Enter
+            return
+
 first_maze = [
     [
         "I",
