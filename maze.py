@@ -6,6 +6,7 @@ class Maze:
         self.treasure_symbol = "X"
         self.boss_symbol = "B"
         self.torch_symbol = "F"
+        self.exit_symbol = "A"
         self.maze = maze
         self.vision_range = vision_range
         self.vision_maze = self.show_vision_maze(vision_range)
@@ -29,10 +30,12 @@ class Maze:
         elif target_pos == self.torch_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
+        elif target_pos == self.exit_symbol:
+            self.move(actual_pos, move_dir)
+            self.maze[actual_pos[0]][actual_pos[1]] = " "
         elif target_pos == self.boss_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
-            print("You won.")
         else:
             self.move(actual_pos, move_dir)
         actual_vision_maze = self.show_vision_maze(self.vision_range)
