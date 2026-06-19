@@ -3,34 +3,25 @@ import time
 import unittest
 from unittest.mock import patch
 
-from story import DEFAULT_PARAGRAPH_PAUSE, get_room_text, intro_text, type_text
+from story import get_room_text, intro_text, type_text
 
 
 class StoryTests(unittest.TestCase):
-    def test_intro_mentions_the_torch(self):
-        self.assertIn("flame", intro_text.lower())
+    def test_intro_exists(self):
+        self.assertIn("flickers", intro_text)
 
-    def test_known_room_text_is_returned(self):
-        text = get_room_text("level_1", 17, 1)
+    def test_unknown_room_has_no_default_text(self):
+        self.assertEqual(get_room_text("main", 99, 99), "")
 
-        self.assertIn("torch", text.lower())
+    def test_type_text_waits_between_paragraphs_when_wait_func_is_given(self):
+        waits = []
 
-    def test_unknown_room_returns_no_repeated_default_text(self):
-        text = get_room_text("level_1", 99, 99)
-
-        self.assertEqual(text, "")
-
-    def test_default_paragraph_pause_is_longer(self):
-        self.assertGreaterEqual(DEFAULT_PARAGRAPH_PAUSE, 0.8)
-
-    def test_type_text_pauses_between_paragraphs(self):
-        sleep_calls = []
-
-        with patch.object(time, "sleep", side_effect=lambda delay: sleep_calls.append(delay)):
+        with patch.object(time, "sleep", return_value=None):
             with patch("sys.stdout", new=io.StringIO()):
-                type_text("One\n\nTwo", delay=0.01, paragraph_pause=0.8)
+                type_text("One\n\nTwo", wait_func=lambda prompt: waits.append(prompt))
 
-        self.assertIn(0.8, sleep_calls)
+        self.assertEqual(len(waits), 1)
+        self.assertIn("Space", waits[0])
 
 
 if __name__ == "__main__":

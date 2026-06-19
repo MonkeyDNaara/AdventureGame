@@ -1,312 +1,247 @@
-import random
-
-from game_logic import get_item_display_name, handle_tile
+from game_logic import collect_item, create_enemy, has_key, item_info
 
 
+UNKNOWN_SYMBOL = "□"
 TORCH_LIGHT_RADIUS = 1
-COLLECTABLE_TYPES = {"torch", "potion", "weapon", "key"}
 
 
 DEFAULT_MAZE = [
-    "IIIIIIIIIIIIIIIIIIII",
-    "I   I I     I W I  I",
-    "IP    I IIIII   I II",
-    "I   I I     I   I II",
-    "IIIII IIIII III I II",
-    "I     I     I      I",
-    "I IIIII II IIIIIII I",
-    "I        I         I",
-    "IIIIIIII IIII III II",
-    "I      I  I I I I  I",
-    "I II I II I I I    I",
-    "I  I I  I I I IIII I",
-    "IIII II I    P     I",
-    "I  S  I I III IIIIII",
-    "I III III I I  EI  I",
-    "I   I  S EI   I I  I",
-    "I I I IIIIIIIII I  I",
-    "IFI I    IE  S  II I",
-    "IOI I II IBI  I    I",
-    "IIIIIIIIIIIIIIIIIIII",
+    "IIIIIIIIIIIIIIIIIIII",     #0
+    "IX  I I     I S I  I",     #1
+    "Ip    I IIIII   I II",     #2
+    "I   I I     I   I II",     #3
+    "IIIII IIIII III I II",     #4
+    "I     I     I      I",     #5
+    "I IIIII II IIIIIII I",     #6
+    "I        I         I",     #7
+    "IIIIIIII IIII III II",     #8
+    "I      I  I I I I  I",     #9
+    "I II I II I I I    I",     #10
+    "I  I I  I I I IIII I",     #11
+    "IIII II I          I",     #12
+    "I     I I III IIII I",     #13
+    "IFIII III I I   I  I",     #14
+    "I   I     I   I I  I",     #15
+    "I I I I IIIIIII I  I",     #16
+    "I I I I IE      II I",     #17
+    "I●I!I I  IBI   I   I",     #18
+    "IIIIIIIIIIAIIIIIIIII",     #19
 ]
 
 
-SPECIAL_TILES = {
-    (1, 14): {"type": "weapon", "name": "iron_sword"},
-    (2, 1): {"type": "potion", "name": "small_potion"},
-    (12, 13): {"type": "potion", "name": "big_potion"},
-    (13, 3): {"type": "spawn", "enemy_level": 1, "spawn_chance": 0.75},
-    (15, 7): {"type": "spawn", "enemy_level": 2, "spawn_chance": 0.75},
-    (17, 13): {"type": "spawn", "enemy_level": 3, "spawn_chance": 0.75},
-    (14, 15): {"type": "enemy", "enemy_level": 2},
-    (15, 9): {"type": "enemy", "enemy_level": 2},
-    (17, 10): {"type": "enemy", "enemy_level": 3},
+HIDDEN_ROOM = [
+    "IIIIIIIIII",   #0
+    "I●  I   !I",   #1
+    "III I IIII",   #2
+    "I   I    I",   #3
+    "I IIII I I",   #4
+    "I      I I",   #5
+    "I IIIIII I",   #6
+    "I M  XII I",   #7
+    "IIIIIIx  I",   #8
+    "IIIIIIIIII",   #9
+]
+
+
+DIRECTIONS = {
+    "w": (-1, 0),
+    "s": (1, 0),
+    "a": (0, -1),
+    "d": (0, 1),
 }
 
 
-SYMBOL_TILES = {
-    " ": {"type": "empty"},
+ITEM_TILES = {
     "F": {"type": "torch"},
-    "P": {"type": "potion", "name": "small_potion"},
-    "W": {"type": "weapon", "name": "rusty_sword"},
-    "E": {"type": "enemy", "enemy_level": 1},
-    "S": {"type": "spawn", "enemy_level": 1, "spawn_chance": 0.75},
-    "B": {"type": "boss"},
-    "A": {"type": "exit"},
+    "p": {"type": "potion", "name": "small_potion"},
+    "P": {"type": "potion", "name": "big_potion"},
+    "S": {"type": "weapon", "name": "rusty_sword"},
+    "x": {"type": "key", "key": "x"},
+}
+
+
+ENEMY_TILES = {
+    "e": 1,
+    "E": 2,
+    "m": 3,
+    "M": 4,
+    "B": 10,
 }
 
 
 class Maze:
-    def __init__(self, maze=None):
-        self.DirDict = {
-            "up": (-1, 0),
-            "down": (1, 0),
-            "left": (0, -1),
-            "right": (0, 1),
+    def __init__(self):
+        self.maps = {
+            "main": [list(row) for row in DEFAULT_MAZE],
+            "hidden": [list(row) for row in HIDDEN_ROOM],
         }
-        self.aliases = {
-            "w": "up",
-            "s": "down",
-            "a": "left",
-            "d": "right",
-        }
-        self.player_symbol = "O"
+        self.current_map = "main"
+        self.maze = self.maps[self.current_map]
+        self.player_symbol = "●"
         self.wall_symbol = "I"
-        self.torch_symbol = "F"
-        self.spawn_symbol = "S"
-        self.boss_symbol = "B"
-        self.maze = [list(row) for row in (maze or DEFAULT_MAZE)]
-        self.player_position = self.check_position(self.maze, self.player_symbol)
+        self.positions = {
+            "main": self.find_and_remove_player("main"),
+            "hidden": self.find_and_remove_player("hidden"),
+        }
+        self.player_position = self.positions["main"]
 
-        if self.player_position is None:
-            raise ValueError("Maze needs one player start symbol 'O'.")
+    def find_and_remove_player(self, map_name):
+        maze = self.maps[map_name]
 
-        self.maze[self.player_position[0]][self.player_position[1]] = " "
+        for row in range(len(maze)):
+            for col in range(len(maze[row])):
+                if maze[row][col] == self.player_symbol:
+                    maze[row][col] = " "
+                    return (row, col)
 
-    def check_position(self, array, symbol):
-        if symbol == self.player_symbol and hasattr(self, "player_position"):
-            return self.player_position
+        raise ValueError("Map needs a player symbol: ●")
 
-        for y, row in enumerate(array):
-            if symbol in row:
-                return (y, row.index(symbol))
+    def tile_at(self, position):
+        row, col = position
+        return self.maze[row][col]
 
-        return None
+    def set_tile(self, position, symbol):
+        row, col = position
+        self.maze[row][col] = symbol
 
-    def normalize_direction(self, direction):
-        direction = direction.lower()
-        return self.aliases.get(direction, direction)
+    def get_tile_info(self, position):
+        symbol = self.tile_at(position)
 
-    def is_inside(self, position):
-        y, x = position
-        return 0 <= y < len(self.maze) and 0 <= x < len(self.maze[y])
+        if symbol in ITEM_TILES:
+            return ITEM_TILES[symbol].copy()
 
-    def tile_symbol(self, position):
-        y, x = position
-        return self.maze[y][x]
+        if symbol in ENEMY_TILES:
+            return {"type": "enemy", "level": ENEMY_TILES[symbol]}
 
-    def set_tile_symbol(self, position, symbol):
-        y, x = position
-        self.maze[y][x] = symbol
+        if symbol == "X":
+            return {"type": "chest"}
 
-    def get_tile(self, position):
-        symbol = self.tile_symbol(position)
-        tile = dict(SYMBOL_TILES.get(symbol, {"type": "empty"}))
-        tile.update(SPECIAL_TILES.get(position, {}))
-        return tile
+        if symbol == "!":
+            return {"type": "door"}
 
-    def get_current_item(self):
-        tile = self.get_tile(self.player_position)
+        if symbol == "A":
+            return {"type": "exit"}
 
-        if tile["type"] in COLLECTABLE_TYPES:
-            return tile
+        return {"type": "empty"}
 
-        return None
+    # One simple move: calculate target, check tile, then decide what happens.
+    def move_player(self, direction):
+        if direction not in DIRECTIONS:
+            return {"outcome": "invalid", "message": "Use W A S D to move."}
 
-    def get_current_item_prompt(self):
-        item = self.get_current_item()
+        row, col = self.player_position
+        row_change, col_change = DIRECTIONS[direction]
+        target = (row + row_change, col + col_change)
 
-        if item is None:
-            return ""
+        if self.tile_at(target) == self.wall_symbol:
+            return {"outcome": "wall", "message": "A wall blocks the way."}
 
-        return f"{get_item_display_name(item)}\nZum Aufnehmen press Space."
+        tile = self.get_tile_info(target)
 
-    def pickup_current_item(self, player):
-        item = self.get_current_item()
-
-        if item is None:
-            return self._result(False, "nothing_to_pick_up", "There is nothing here to pick up.")
-
-        outcome = handle_tile(player, item)
-
-        if outcome == "collected":
-            self.set_tile_symbol(self.player_position, " ")
-
-        return self._result(True, outcome, "Picked up item.")
-
-    def check_action(self, direction):
-        return self.move_player(None, direction, reveal_result=True)
-
-    def move(self, actual_pos, move_dir):
-        target = (actual_pos[0] + move_dir[0], actual_pos[1] + move_dir[1])
-
-        if self.is_inside(target) and self.tile_symbol(target) != self.wall_symbol:
-            self.player_position = target
-
-        return self.render_grid(reveal_all=True)
-
-    def move_player(
-        self,
-        player,
-        direction,
-        input_func=input,
-        combat_action_provider=None,
-        reveal_result=False,
-        spawn_roll=None,
-    ):
-        direction = self.normalize_direction(direction)
-
-        if direction not in self.DirDict:
-            return self._result(False, "invalid", "Unknown direction.")
-
-        dy, dx = self.DirDict[direction]
-        target = (self.player_position[0] + dy, self.player_position[1] + dx)
-
-        if not self.is_inside(target) or self.tile_symbol(target) == self.wall_symbol:
-            return self._result(False, "blocked", "A wall blocks the way.")
-
-        if player is None:
-            self.player_position = target
-            if reveal_result:
-                self.print_maze(reveal_all=True)
-            return self._result(True, "moved", "Moved.")
-
-        tile = self.get_tile(target)
-
-        if tile["type"] in COLLECTABLE_TYPES:
-            self.player_position = target
-            return self._result(True, "standing_on_item", "Moved.")
-
-        if tile["type"] == "spawn":
-            roll = random.random() if spawn_roll is None else spawn_roll
-            if roll <= tile.get("spawn_chance", 1):
-                tile = {"type": "enemy", "enemy_level": tile["enemy_level"]}
-            else:
-                tile = {"type": "empty"}
-                print("The shadows move, but nothing attacks.")
-
-        outcome = handle_tile(player, tile, input_func, combat_action_provider)
-
-        if outcome in {"fled", "locked", "dead"}:
-            return self._result(False, outcome, "You stay where you are.")
+        if tile["type"] == "enemy":
+            enemy = create_enemy(tile["level"])
+            return {"outcome": "enemy", "message": f"A {enemy['name']} blocks the way."}
 
         self.player_position = target
 
-        if outcome == "enemy_defeated" and self.tile_symbol(target) != self.spawn_symbol:
-            self.set_tile_symbol(target, " ")
+        if tile["type"] == "door":
+            self.change_map()
+            return {"outcome": "door", "message": "You found a hidden room."}
 
-        if outcome == "win":
-            self.set_tile_symbol(target, "A")
-            return self._result(True, "win", "The maze releases you.")
+        if tile["type"] == "exit":
+            return {"outcome": "win", "message": "You escaped the maze."}
 
-        return self._result(True, outcome, "Moved.")
+        return {"outcome": "moved", "message": "Moved."}
 
-    def _result(self, moved, outcome, message):
-        return {
-            "moved": moved,
-            "outcome": outcome,
-            "message": message,
-            "position": self.player_position,
-        }
+    # Space uses this function. It only collects/open things under the player.
+    def collect_current_item(self, player):
+        tile = self.get_tile_info(self.player_position)
 
-    def render_grid(self, player=None, reveal_all=False):
-        lines = []
+        if tile["type"] == "chest":
+            return self.open_chest(player)
 
-        for y, row in enumerate(self.maze):
-            visible_row = []
-            for x, symbol in enumerate(row):
-                position = (y, x)
+        if tile["type"] not in ["torch", "potion", "weapon", "key"]:
+            return {"outcome": "nothing", "message": "There is nothing to pick up."}
+
+        collect_item(player, tile)
+        self.set_tile(self.player_position, " ")
+        return {"outcome": "collected", "message": "Item collected."}
+
+    def open_chest(self, player):
+        if not has_key(player, "x"):
+            return {"outcome": "locked", "message": "The chest is locked. You need key x."}
+
+        player["keys"].remove("x")
+        player["weapon"] = "iron_sword"
+        player["inventory"].append("big_potion")
+        player["inventory"].append("big_potion")
+        player["inventory"].append("big_potion")
+        self.set_tile(self.player_position, " ")
+        return {"outcome": "chest_opened", "message": "You opened the chest and found an Iron Sword and 3 Big Potions."}
+
+    def get_current_item_prompt(self):
+        tile = self.get_tile_info(self.player_position)
+
+        if tile["type"] == "torch":
+            return "Torch\nPress Space to take it from the wall."
+
+        if tile["type"] in ["potion", "weapon", "key"]:
+            return f"{item_info(tile)}\nPress Space to pick it up."
+
+        if tile["type"] == "chest":
+            return "Chest\nPress Space to open it with key x."
+
+        return ""
+
+    def change_map(self):
+        self.positions[self.current_map] = self.player_position
+
+        if self.current_map == "main":
+            self.current_map = "hidden"
+        else:
+            self.current_map = "main"
+
+        self.maze = self.maps[self.current_map]
+        self.player_position = self.positions[self.current_map]
+
+    def render(self, player):
+        rows = []
+
+        for row in range(len(self.maze)):
+            visible_row = ""
+            for col in range(len(self.maze[row])):
+                position = (row, col)
 
                 if position == self.player_position:
-                    visible_row.append(self.player_symbol)
-                elif reveal_all or self.is_visible(position, player):
-                    visible_row.append(symbol)
+                    visible_row += self.player_symbol
+                elif self.is_visible(position, player):
+                    visible_row += self.tile_at(position)
                 else:
-                    visible_row.append("?")
+                    visible_row += UNKNOWN_SYMBOL
 
-            lines.append(visible_row)
+            rows.append(visible_row)
 
-        return lines
-
-    def render(self, player=None, reveal_all=False):
-        return "\n".join("".join(row) for row in self.render_grid(player, reveal_all))
-
-    def print_maze(self, player=None, reveal_all=False):
-        print("")
-        print(self.render(player, reveal_all))
+        return "\n".join(rows)
 
     def is_visible(self, position, player):
-        if position == self.player_position:
-            return True
-
         if self.is_lit_by_torch(position):
             return True
 
-        if player is None:
+        if player["vision"] <= 0:
             return False
 
-        vision = player.get("vision", 0)
-        if vision <= 0:
-            return False
-
-        dy = abs(position[0] - self.player_position[0])
-        dx = abs(position[1] - self.player_position[1])
-
-        if max(dy, dx) > vision:
-            return False
-
-        return self.has_line_of_sight(self.player_position, position)
+        row_distance = abs(position[0] - self.player_position[0])
+        col_distance = abs(position[1] - self.player_position[1])
+        return max(row_distance, col_distance) <= player["vision"]
 
     def is_lit_by_torch(self, position):
-        for y, row in enumerate(self.maze):
-            for x, symbol in enumerate(row):
-                if symbol != self.torch_symbol:
-                    continue
+        for row in range(len(self.maze)):
+            for col in range(len(self.maze[row])):
+                if self.maze[row][col] == "F":
+                    row_distance = abs(position[0] - row)
+                    col_distance = abs(position[1] - col)
 
-                if max(abs(position[0] - y), abs(position[1] - x)) <= TORCH_LIGHT_RADIUS:
-                    return True
+                    if max(row_distance, col_distance) <= TORCH_LIGHT_RADIUS:
+                        return True
 
         return False
-
-    def has_line_of_sight(self, start, end):
-        for point in self._line_between(start, end)[1:-1]:
-            if self.tile_symbol(point) == self.wall_symbol:
-                return False
-
-        return True
-
-    def _line_between(self, start, end):
-        y0, x0 = start
-        y1, x1 = end
-        points = []
-        dx = abs(x1 - x0)
-        dy = -abs(y1 - y0)
-        sx = 1 if x0 < x1 else -1
-        sy = 1 if y0 < y1 else -1
-        error = dx + dy
-
-        while True:
-            points.append((y0, x0))
-
-            if (y0, x0) == (y1, x1):
-                return points
-
-            doubled_error = 2 * error
-
-            if doubled_error >= dy:
-                error += dy
-                x0 += sx
-
-            if doubled_error <= dx:
-                error += dx
-                y0 += sy
