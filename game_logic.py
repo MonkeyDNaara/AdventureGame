@@ -7,22 +7,35 @@ DOT_COUNT = 10
 
 
 class Character():
-    def __init__(self, name, level = 1, hp = 20, attack = 5, defense = 5, vision_range = 2):
+    def __init__(self, name, level = 1, exp = 0, hp = 20, attack = 5, defense = 5, vision_range = 2, exp_on_kill = 10):
         self.name = name
         self.level = level
+        self.exp = exp
+        self.exp_on_kill = exp_on_kill
         self.hp = hp
         self.actual_hp = hp
         self.attack = attack
-        self.attack_init = attack
+        self.base_attack = attack
         self.defense = defense
-        self.defense_init = defense
+        self.base_defense = defense
         self.vision_range = vision_range
         self.be_infight = False
         self.inventory = []
+        self.experience_to_next_level = [10, 20, 30, 50, 80, 130, 210, 340, 550, 890]
+
+    def level_up(self):
+        self.level += 1
+        self.hp += 5
+        self.actual_hp += 5
+        self.base_attack += 1
+        self.base_defense += 1
+        self.attack = self.base_attack + self.attack_bonus
+        self.defense = self.base_defense + self.defense_bonus
+        print(f"Level up! You are now LVL {self.level}.")
     
     def pick_up_item(self, item):
-        self.attack = self.attack_init
-        self.defense = self.defense_init
+        self.attack = self.base_attack
+        self.defense = self.base_defense
         self.inventory.append(item)
         self.attack_bonus, self.defense_bonus = self.calc_stats()
         self.attack += self.attack_bonus
@@ -44,12 +57,20 @@ class Character():
         while self.actual_hp > 0 and enemy.actual_hp > 0:
             self.be_infight = True
             damage_to_enemy = max(0, self.attack - enemy.defense)
-            print(f"You dealt {damage_to_enemy} damage to the enemy. Enemy HP: {enemy.actual_hp}/{enemy.hp}")
-            damage_to_self = max(0, enemy.attack - self.defense)
-            print(f"The enemy dealt {damage_to_self} damage to you. Your HP: {self.actual_hp}/{self.hp}")
+            print(f"You dealt {damage_to_enemy} damage to the {enemy.name}. Enemy HP: {enemy.actual_hp}/{enemy.hp}")
             enemy.actual_hp -= damage_to_enemy
+            if enemy.actual_hp <= 0:
+                print(f"You defeated the {enemy.name}!")
+                self.exp += enemy.exp_on_kill
+                print(f"You gained {enemy.exp_on_kill} EXP. Total EXP: {self.exp}")
+                break
+            damage_to_self = max(0, enemy.attack - self.defense)
+            print(f"{enemy.name} dealt {damage_to_self} damage to you. Your HP: {self.actual_hp}/{self.hp}")
             self.actual_hp -= damage_to_self
         self.be_infight = False
+        while self.exp >= self.experience_to_next_level[self.level - 1]:
+            self.exp -= self.experience_to_next_level[self.level - 1]
+            self.level_up()
         return 
 
 
@@ -66,7 +87,7 @@ armors = [Item("Leather Armor", "armor", defense = 2), Item("Chainmail", "armor"
 useful_items = [Item("Torch", "util")]
 potions = [Item("Small Potion", "potion", heal = 10), Item("Big Potion", "potion", heal = 20)]
 
-enemies = [Character("Boss", hp = 30, attack = 7, defense = 5)]
+enemies = [Character("Boss", hp = 30, attack = 7, defense = 5, exp_on_kill = 30), Character("Goblin", hp = 10, attack = 3, defense = 2, exp_on_kill = 10)]
 
 # Fixed enemy values. Fights are disabled for now, but the map can already read enemy tiles.
 # enemies = {

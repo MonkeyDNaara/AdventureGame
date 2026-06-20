@@ -10,6 +10,7 @@ class Maze:
         self.boss_symbol = "B"
         self.torch_symbol = "F"
         self.exit_symbol = "A"
+        self.goblin_symbol = "G"
         self.maze = maze
         self.vision_range = vision_range
         self.vision_maze = self.show_vision_maze(self.vision_range)
@@ -54,6 +55,10 @@ class Maze:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
             self.character.fight(game_logic.enemies[0], key)
+        elif target_pos == self.goblin_symbol:
+            self.move(actual_pos, move_dir)
+            self.maze[actual_pos[0]][actual_pos[1]] = " "
+            self.character.fight(game_logic.enemies[1], key)
         else:
             self.move(actual_pos, move_dir)
         actual_vision_maze = self.show_vision_maze(self.vision_range)
