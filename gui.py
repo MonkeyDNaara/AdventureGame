@@ -42,23 +42,28 @@ class MainWindow:
             2, weight=1)
         self.statsframe.rowconfigure(
             3, weight=1)
+        self.statsframe.rowconfigure(
+            4, weight=1)
         self.statsframe.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
         
         self.char_name_label = tk.Label(self.statsframe, text=f"Name: {self.maze.character.name}", font=("Arial", 20))
         self.char_name_label.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
+        self.char_level_label = tk.Label(self.statsframe, text=f"Level: {self.maze.character.level}", font=("Arial", 16))
+        self.char_level_label.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
+
         self.char_hp_label = tk.Label(self.statsframe, text=f"HP: {self.maze.character.actual_hp}/{self.maze.character.hp}", font=("Arial", 16))
-        self.char_hp_label.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.char_hp_label.grid(row=2, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
         self.char_attack_label = tk.Label(self.statsframe, text=f"Attack: {self.maze.character.attack}", font=("Arial", 16))
-        self.char_attack_label.grid(row=2, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.char_attack_label.grid(row=3, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
         self.char_defense_label = tk.Label(self.statsframe, text=f"Defense: {self.maze.character.defense}", font=("Arial", 16))
-        self.char_defense_label.grid(row=3, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.char_defense_label.grid(row=4, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
         self.inventory_frame = tk.Frame(self.statusframe)
         self.inventory_frame.rowconfigure(0, weight=1)
-        self.inventory_frame.rowconfigure(1, weight=3)
+        self.inventory_frame.rowconfigure(1, weight=4)
         self.inventory_label = tk.Label(self.inventory_frame, text="Inventory:", font=("Arial", 20))
         self.inventory_label.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
         self.inventory_items_label = tk.Label(self.inventory_frame, text=f" ", font=("Arial", 16))
@@ -183,6 +188,7 @@ class MainWindow:
         self.update_stats()
 
     def update_stats(self):
+        self.char_level_label.config(text=f"Level: {self.maze.character.level}")
         self.char_hp_label.config(text=f"HP: {self.maze.character.actual_hp}/{self.maze.character.hp}")
         self.char_attack_label.config(text=f"Attack: {self.maze.character.attack}")
         self.char_defense_label.config(text=f"Defense: {self.maze.character.defense}")
