@@ -128,7 +128,7 @@ class MainWindow:
         self.maze_label25 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
         self.maze_label25.grid(row=4, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
         self.maze_frame.pack(pady=10, padx=10)
-        self.story_label = tk.Label(self.root, text="", font=("Arial", 16))
+        self.story_label = tk.Label(self.root, text="Press Enter to start the game", font=("Arial", 16))
         self.story_label.pack(pady=10, padx=10)
 
         buttonframe = tk.Frame(self.root)
