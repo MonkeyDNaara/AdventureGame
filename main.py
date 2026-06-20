@@ -553,4 +553,4 @@ first_maze = [
 ]
 
 
-MainWindow(first_maze, "Niko", 10, 5, 5, 2)
+MainWindow(first_maze)

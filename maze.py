@@ -1,3 +1,6 @@
+import game_logic
+import random
+
 class Maze:
     def __init__(self, maze, vision_range):
         self.DirDict = {"w": (-1, 0), "s": (1, 0), "a": (0, -1), "d": (0, 1), " ": (0, 0)}
@@ -9,7 +12,8 @@ class Maze:
         self.exit_symbol = "A"
         self.maze = maze
         self.vision_range = vision_range
-        self.vision_maze = self.show_vision_maze(vision_range)
+        self.vision_maze = self.show_vision_maze(self.vision_range)
+        self.character = game_logic.Character("Nyrik")
 
     def check_position(self, array, symbol):
         for entry in array:
@@ -27,6 +31,7 @@ class Maze:
         elif target_pos == self.treasure_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
+            self.character.pick_up_item(game_logic.weapons[random.randint(0, len(game_logic.weapons) - 1)])
         elif target_pos == self.torch_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
@@ -49,12 +54,6 @@ class Maze:
             actual_pos[1] + move_dir[1]
         ] = self.player_symbol
         return self.maze
-
-    def print_maze(self):
-        # print("")
-        # for i in self.maze:
-        #     print("".join(i))
-        pass
 
     def show_vision_maze(self, vision_range):
         actual_pos = self.check_position(self.maze, self.player_symbol)
