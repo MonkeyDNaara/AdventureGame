@@ -31,10 +31,15 @@ class Maze:
         elif target_pos == self.treasure_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
-            self.character.pick_up_item(game_logic.weapons[random.randint(0, len(game_logic.weapons) - 1)])
+            while True and len(self.character.inventory) < len(game_logic.weapons):
+                random_weapon = game_logic.weapons[random.randint(0, len(game_logic.weapons) - 1)]
+                if random_weapon not in self.character.inventory:
+                    self.character.pick_up_item(random_weapon)
+                    break
         elif target_pos == self.torch_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
+            self.character.pick_up_item(game_logic.useful_items[0])
         elif target_pos == self.exit_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
