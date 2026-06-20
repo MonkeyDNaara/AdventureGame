@@ -18,37 +18,53 @@ class MainWindow:
 
         self.root = tk.Tk()
         self.root.title("Maze Runner")
-        self.root.geometry("1200x800")
+        self.root.geometry("1400x1000")
 
-        self.header = tk.Label(self.root, text="Maze Runner", font=("Arial", 24), fg='red')
+        self.header = tk.Label(self.root, text="Maze Runner", font=("Arial", 30), fg='purple')
         self.header.pack(padx=20, pady=20)
         self.header.pack(fill="x")
         
-        self.statsframe = tk.Frame(self.root)
+        self.statusframe = tk.Frame(self.root)
+        self.statusframe.columnconfigure(0, weight=1)
+        self.statusframe.columnconfigure(1, weight=1)
+        self.statusframe.pack(fill="x", padx=10, pady=10)
+
+        self.statsframe = tk.Frame(self.statusframe)
         self.statsframe.columnconfigure(
             0, weight=1
         )
-        self.statsframe.columnconfigure(
-            1, weight=1)
         self.statsframe.rowconfigure(
             0, weight=1
         )
         self.statsframe.rowconfigure(
             1, weight=1)
+        self.statsframe.rowconfigure(
+            2, weight=1)
+        self.statsframe.rowconfigure(
+            3, weight=1)
+        self.statsframe.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
         
-        self.char_name_label = tk.Label(self.statsframe, text=f"Name: {self.maze.character.name}", font=("Arial", 16))
+        self.char_name_label = tk.Label(self.statsframe, text=f"Name: {self.maze.character.name}", font=("Arial", 20))
         self.char_name_label.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
         self.char_hp_label = tk.Label(self.statsframe, text=f"HP: {self.maze.character.actual_hp}/{self.maze.character.hp}", font=("Arial", 16))
         self.char_hp_label.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
         self.char_attack_label = tk.Label(self.statsframe, text=f"Attack: {self.maze.character.attack}", font=("Arial", 16))
-        self.char_attack_label.grid(row=0, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.char_attack_label.grid(row=2, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
         self.char_defense_label = tk.Label(self.statsframe, text=f"Defense: {self.maze.character.defense}", font=("Arial", 16))
-        self.char_defense_label.grid(row=1, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.char_defense_label.grid(row=3, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
-        self.statsframe.pack(fill="x", pady=10, padx=10)
+        self.inventory_frame = tk.Frame(self.statusframe)
+        self.inventory_frame.rowconfigure(0, weight=1)
+        self.inventory_frame.rowconfigure(1, weight=3)
+        self.inventory_label = tk.Label(self.inventory_frame, text="Inventory:", font=("Arial", 20))
+        self.inventory_label.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.inventory_items_label = tk.Label(self.inventory_frame, text=f" ", font=("Arial", 16))
+        self.inventory_items_label.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.inventory_frame.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.inventory_frame.grid(row=0, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
 
         self.maze_frame = tk.Frame(self.root)
         self.maze_frame.columnconfigure(0, weight = 1)
@@ -112,7 +128,7 @@ class MainWindow:
         self.maze_label25 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
         self.maze_label25.grid(row=4, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
         self.maze_frame.pack(pady=10, padx=10)
-        self.story_label = tk.Label(self.root, text="", font=("Arial", 16))
+        self.story_label = tk.Label(self.root, text="Press Enter to start the game", font=("Arial", 16))
         self.story_label.pack(pady=10, padx=10)
 
         buttonframe = tk.Frame(self.root)
@@ -144,7 +160,7 @@ class MainWindow:
         )
         self.potion_button.grid(row=0, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
 
-        buttonframe.pack(fill="x", pady=10, padx=10)
+        # buttonframe.pack(fill="x", pady=10, padx=10)
 
 
         self.root.update()
@@ -170,6 +186,7 @@ class MainWindow:
         self.char_hp_label.config(text=f"HP: {self.maze.character.actual_hp}/{self.maze.character.hp}")
         self.char_attack_label.config(text=f"Attack: {self.maze.character.attack}")
         self.char_defense_label.config(text=f"Defense: {self.maze.character.defense}")
+        self.inventory_items_label.config(text = f"{'\n'.join([f"{item.name}: +{item.attack} attack, +{item.defense} defense, +{item.heal} heal" for item in self.maze.character.inventory])}")
 
     def update_story_label(self, actual_pos):
             if actual_pos in story.story_positions.keys():

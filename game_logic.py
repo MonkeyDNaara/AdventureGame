@@ -50,6 +50,7 @@ class Item():
 
 weapons = [Item("Wooden Stick", "weapon", attack = 2), Item("Old Rusty Sword", "weapon", attack = 4), Item("Iron Sword", "weapon", attack = 7)]
 armors = [Item("Leather Armor", "armor", defense = 2), Item("Chainmail", "armor", defense = 4), Item("Plate Armor", "armor", defense = 7)]
+useful_items = [Item("Torch", "util")]
 potions = [Item("Small Potion", "potion", heal = 10), Item("Big Potion", "potion", heal = 20)]
 
 
