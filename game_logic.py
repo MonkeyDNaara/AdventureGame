@@ -17,6 +17,7 @@ class Character():
         self.defense = defense
         self.defense_init = defense
         self.vision_range = vision_range
+        self.be_infight = False
         self.inventory = []
     
     def pick_up_item(self, item):
@@ -38,6 +39,18 @@ class Character():
         attack_bonus = max(attack_bonus_items) if attack_bonus_items else 0
         defense_bonus = max(defense_bonus_items) if defense_bonus_items else 0
         return attack_bonus, defense_bonus
+    
+    def fight(self, enemy, key):
+        while self.actual_hp > 0 and enemy.actual_hp > 0:
+            self.be_infight = True
+            damage_to_enemy = max(0, self.attack - enemy.defense)
+            print(f"You dealt {damage_to_enemy} damage to the enemy. Enemy HP: {enemy.actual_hp}/{enemy.hp}")
+            damage_to_self = max(0, enemy.attack - self.defense)
+            print(f"The enemy dealt {damage_to_self} damage to you. Your HP: {self.actual_hp}/{self.hp}")
+            enemy.actual_hp -= damage_to_enemy
+            self.actual_hp -= damage_to_self
+        self.be_infight = False
+        return 
 
 
 class Item():
@@ -53,7 +66,7 @@ armors = [Item("Leather Armor", "armor", defense = 2), Item("Chainmail", "armor"
 useful_items = [Item("Torch", "util")]
 potions = [Item("Small Potion", "potion", heal = 10), Item("Big Potion", "potion", heal = 20)]
 
-
+enemies = [Character("Boss", hp = 30, attack = 7, defense = 5)]
 
 # Fixed enemy values. Fights are disabled for now, but the map can already read enemy tiles.
 # enemies = {
