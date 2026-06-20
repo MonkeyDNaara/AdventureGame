@@ -53,6 +53,7 @@ class Maze:
         elif target_pos == self.boss_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
+            self.character.fight(game_logic.enemies[0], key)
         else:
             self.move(actual_pos, move_dir)
         actual_vision_maze = self.show_vision_maze(self.vision_range)

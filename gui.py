@@ -174,7 +174,7 @@ class MainWindow:
         self.root.mainloop()
     
     def key_event(self, event):
-        if event.keysym == "w" or event.keysym == "a" or event.keysym == "s" or event.keysym == "d":
+        if not self.maze.character.be_infight and event.keysym == "w" or event.keysym == "a" or event.keysym == "s" or event.keysym == "d":
             actual_vision_maze = self.maze.check_action(event.keysym)
         else:
             actual_vision_maze = self.maze.check_action()
