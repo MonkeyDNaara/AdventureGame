@@ -6,15 +6,14 @@ import time
 
 
 class MainWindow:
-    def __init__(self, maze, char_name, hp, attack, defense, vision_range=1):
+    def __init__(self, maze, vision_range = 2):
         self.initial_maze = maze
-        self.char_name = char_name
-        self.char_hp = hp
-        self.char_attack = attack
-        self.char_defense = defense
         self.vision_range = vision_range
         self.maze = Maze(self.initial_maze, self.vision_range)
-        # self.text = story.intro_text
+        self.char_name = self.maze.character.name
+        self.char_hp = self.maze.character.hp
+        self.char_attack = self.maze.character.attack
+        self.char_defense = self.maze.character.defense
         self.story_happened = []
 
         self.root = tk.Tk()
@@ -37,16 +36,16 @@ class MainWindow:
         self.statsframe.rowconfigure(
             1, weight=1)
         
-        self.char_name_label = tk.Label(self.statsframe, text=f"Name: {self.char_name}", font=("Arial", 16))
+        self.char_name_label = tk.Label(self.statsframe, text=f"Name: {self.maze.character.name}", font=("Arial", 16))
         self.char_name_label.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
-        self.char_hp_label = tk.Label(self.statsframe, text=f"HP: {self.char_hp}", font=("Arial", 16))
+        self.char_hp_label = tk.Label(self.statsframe, text=f"HP: {self.maze.character.actual_hp}/{self.maze.character.hp}", font=("Arial", 16))
         self.char_hp_label.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
 
-        self.char_attack_label = tk.Label(self.statsframe, text=f"Attack: {self.char_attack}", font=("Arial", 16))
+        self.char_attack_label = tk.Label(self.statsframe, text=f"Attack: {self.maze.character.attack}", font=("Arial", 16))
         self.char_attack_label.grid(row=0, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
 
-        self.char_defense_label = tk.Label(self.statsframe, text=f"Defense: {self.char_defense}", font=("Arial", 16))
+        self.char_defense_label = tk.Label(self.statsframe, text=f"Defense: {self.maze.character.defense}", font=("Arial", 16))
         self.char_defense_label.grid(row=1, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
 
         self.statsframe.pack(fill="x", pady=10, padx=10)
@@ -62,56 +61,6 @@ class MainWindow:
         self.maze_frame.rowconfigure(2, weight = 1)
         self.maze_frame.rowconfigure(3, weight = 1)
         self.maze_frame.rowconfigure(4, weight = 1)
-        # self.maze_label1 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[0][0]}", font=("Arial", 20))
-        # self.maze_label1.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label2 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[0][1]}", font=("Arial", 20))
-        # self.maze_label2.grid(row=0, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label3 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[0][2]}", font=("Arial", 20))
-        # self.maze_label3.grid(row=0, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label4 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[0][3]}", font=("Arial", 20))
-        # self.maze_label4.grid(row=0, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label5 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[0][4]}", font=("Arial", 20))
-        # self.maze_label5.grid(row=0, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label6 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[1][0]}", font=("Arial", 20))
-        # self.maze_label6.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label7 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[1][1]}", font=("Arial", 20))
-        # self.maze_label7.grid(row=1, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label8 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[1][2]}", font=("Arial", 20))
-        # self.maze_label8.grid(row=1, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label9 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[1][3]}", font=("Arial", 20))
-        # self.maze_label9.grid(row=1, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label10 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[1][4]}", font=("Arial", 20))
-        # self.maze_label10.grid(row=1, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label11 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[2][0]}", font=("Arial", 20))
-        # self.maze_label11.grid(row=2, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label12 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[2][1]}", font=("Arial", 20), fg = "blue")
-        # self.maze_label12.grid(row=2, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label13 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[2][2]}", font=("Arial", 20))
-        # self.maze_label13.grid(row=2, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label14 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[2][3]}", font=("Arial", 20))
-        # self.maze_label14.grid(row=2, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label15 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[2][4]}", font=("Arial", 20))
-        # self.maze_label15.grid(row=2, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label16 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[3][0]}", font=("Arial", 20))
-        # self.maze_label16.grid(row=3, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label17 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[3][1]}", font=("Arial", 20))
-        # self.maze_label17.grid(row=3, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label18 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[3][2]}", font=("Arial", 20))
-        # self.maze_label18.grid(row=3, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label19 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[3][3]}", font=("Arial", 20))
-        # self.maze_label19.grid(row=3, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label20 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[3][4]}", font=("Arial", 20))
-        # self.maze_label20.grid(row=3, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label21 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[4][0]}", font=("Arial", 20))
-        # self.maze_label21.grid(row=4, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label22 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[4][1]}", font=("Arial", 20))
-        # self.maze_label22.grid(row=4, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label23 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[4][2]}", font=("Arial", 20))
-        # self.maze_label23.grid(row=4, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label24 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[4][3]}", font=("Arial", 20))
-        # self.maze_label24.grid(row=4, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        # self.maze_label25 = tk.Label(self.maze_frame, text=f"{self.maze.vision_maze[4][4]}", font=("Arial", 20))
-        # self.maze_label25.grid(row=4, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
         self.maze_label1 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
         self.maze_label1.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
         self.maze_label2 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
@@ -215,6 +164,12 @@ class MainWindow:
             actual_vision_maze = self.maze.check_action()
         self.update_label(actual_vision_maze)
         self.update_story_label(self.maze.check_position(self.maze.maze, self.maze.player_symbol))
+        self.update_stats()
+
+    def update_stats(self):
+        self.char_hp_label.config(text=f"HP: {self.maze.character.actual_hp}/{self.maze.character.hp}")
+        self.char_attack_label.config(text=f"Attack: {self.maze.character.attack}")
+        self.char_defense_label.config(text=f"Defense: {self.maze.character.defense}")
 
     def update_story_label(self, actual_pos):
             if actual_pos in story.story_positions.keys():
@@ -226,19 +181,7 @@ class MainWindow:
                         story_text += char
                         self.story_label.config(text = story_text)
                         self.root.update()
-                        time.sleep(0.03)
-
-            # if actual_pos == (18, 1) and (story.intro_text not in self.story_happened):
-            #     story_text = ""
-            #     self.story_label.config(text = " ")
-            #     self.story_happened.append(story.intro_text)
-            #     for char in story.intro_text:
-            #         story_text += char
-            #         self.story_label.config(text = story_text)
-            #         self.root.update()
-            #         time.sleep(0.03)
-            
-            
+                        time.sleep(0.03)               
 
     def update_label(self, vision_maze):
         self.maze_label1.config(text = f"{vision_maze[0][0]}", fg = "white")
@@ -516,9 +459,6 @@ class MainWindow:
             self.maze_label25.config(fg = "orange")
         elif vision_maze[4][4] == self.maze.exit_symbol:
             self.maze_label25.config(fg = "green")
-
-
-
 
         self.root.update()
     
