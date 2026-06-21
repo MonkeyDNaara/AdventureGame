@@ -55,11 +55,11 @@ class Maze:
         elif target_pos == self.boss_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
-            self.character.fight(game_logic.enemies[0], key)
+            self.character.fight(game_logic.enemies[0])
         elif target_pos == self.goblin_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "
-            self.character.fight(game_logic.enemies[1], key)
+            self.character.fight(game_logic.enemies[1])
         elif target_pos == self.potion_symbol:
             self.move(actual_pos, move_dir)
             self.maze[actual_pos[0]][actual_pos[1]] = " "

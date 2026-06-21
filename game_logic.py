@@ -65,7 +65,7 @@ class Character():
         defense_bonus = max(defense_bonus_items) if defense_bonus_items else 0
         return attack_bonus, defense_bonus
     
-    def fight(self, enemy, key):
+    def fight(self, enemy):
         while self.actual_hp > 0 and enemy.actual_hp > 0:
             self.be_infight = True
             damage_to_enemy = max(0, self.attack - enemy.defense)
@@ -83,6 +83,7 @@ class Character():
         while self.exp >= self.experience_to_next_level[self.level - 1]:
             self.exp -= self.experience_to_next_level[self.level - 1]
             self.level_up()
+        enemy.actual_hp = enemy.hp
         return 
 
 
