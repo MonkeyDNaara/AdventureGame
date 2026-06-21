@@ -1,4 +1,5 @@
 import math
+import gui
 
 
 FULL_DOT = "●"
@@ -33,6 +34,17 @@ class Character():
         self.defense = self.base_defense + self.defense_bonus
         print(f"Level up! You are now LVL {self.level}.")
     
+    def use_potion(self):
+        if potions[0] not in self.inventory:
+            print("You don't have a potion.")
+            return
+        self.actual_hp += potions[0].heal
+        self.inventory.remove(potions[0])
+        if self.actual_hp > self.hp:
+            self.actual_hp = self.hp
+        print(f"You used {potions[0].name} and restored {potions[0].heal} HP.\nHP: {self.actual_hp}/{self.hp}")
+
+
     def pick_up_item(self, item):
         self.attack = self.base_attack
         self.defense = self.base_defense
@@ -53,7 +65,7 @@ class Character():
         defense_bonus = max(defense_bonus_items) if defense_bonus_items else 0
         return attack_bonus, defense_bonus
     
-    def fight(self, enemy, key):
+    def fight(self, enemy):
         while self.actual_hp > 0 and enemy.actual_hp > 0:
             self.be_infight = True
             damage_to_enemy = max(0, self.attack - enemy.defense)
@@ -71,6 +83,7 @@ class Character():
         while self.exp >= self.experience_to_next_level[self.level - 1]:
             self.exp -= self.experience_to_next_level[self.level - 1]
             self.level_up()
+        enemy.actual_hp = enemy.hp
         return 
 
 
@@ -85,9 +98,9 @@ class Item():
 weapons = [Item("Wooden Stick", "weapon", attack = 2), Item("Old Rusty Sword", "weapon", attack = 4), Item("Iron Sword", "weapon", attack = 7)]
 armors = [Item("Leather Armor", "armor", defense = 2), Item("Chainmail", "armor", defense = 4), Item("Plate Armor", "armor", defense = 7)]
 useful_items = [Item("Torch", "util")]
-potions = [Item("Small Potion", "potion", heal = 10), Item("Big Potion", "potion", heal = 20)]
+potions = [Item("Small Potion", "potion", heal = 10)]
 
-enemies = [Character("Boss", hp = 30, attack = 7, defense = 5, exp_on_kill = 30), Character("Goblin", hp = 10, attack = 3, defense = 2, exp_on_kill = 10)]
+enemies = [Character("Boss", hp = 30, attack = 7, defense = 5, exp_on_kill = 30), Character("Goblin", hp = 10, attack = 7, defense = 3, exp_on_kill = 10)]
 
 # Fixed enemy values. Fights are disabled for now, but the map can already read enemy tiles.
 # enemies = {
