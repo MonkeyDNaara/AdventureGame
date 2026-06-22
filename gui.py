@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import messagebox
 from maze import Maze
 import story
 import time
@@ -15,6 +14,7 @@ class MainWindow:
         self.char_attack = self.maze.character.attack
         self.char_defense = self.maze.character.defense
         self.story_happened = []
+        self.story_ongoing = False
 
         self.root = tk.Tk()
         self.root.title("Maze Runner")
@@ -168,6 +168,8 @@ class MainWindow:
 
         buttonframe.pack(fill="x", pady=10, padx=10)
 
+        self.copyright_label = tk.Label(self.root, text="© Eric & Niko", font=("Arial", 12), fg='gray')
+        self.copyright_label.pack(side="bottom", pady=10)
 
         self.root.update()
         self.root.bind("<w>", self.key_event)
@@ -184,7 +186,7 @@ class MainWindow:
         self.update_stats()
 
     def key_event(self, event):
-        if not self.maze.character.be_infight and event.keysym == "w" or event.keysym == "a" or event.keysym == "s" or event.keysym == "d":
+        if not self.maze.character.be_infight and not self.story_ongoing == True and (event.keysym == "w" or event.keysym == "a" or event.keysym == "s" or event.keysym == "d"):
             actual_vision_maze = self.maze.check_action(event.keysym)
         else:
             actual_vision_maze = self.maze.check_action()
@@ -200,16 +202,18 @@ class MainWindow:
         self.inventory_items_label.config(text = f"{'\n'.join([f"{item.name}: +{item.attack} attack, +{item.defense} defense, +{item.heal} heal" for item in self.maze.character.inventory])}")
 
     def update_story_label(self, actual_pos):
-            if actual_pos in story.story_positions.keys():
-                if story.story_positions[actual_pos] not in self.story_happened:
+            if actual_pos in story.story_positions:
+                if actual_pos not in self.story_happened:
+                    self.story_ongoing = True
                     story_text = ""
                     self.story_label.config(text = " ")
-                    self.story_happened.append(story.story_positions[actual_pos])
+                    self.story_happened.append(actual_pos)
                     for char in story.story_texts[story.story_positions[actual_pos]]:
                         story_text += char
                         self.story_label.config(text = story_text)
                         self.root.update()
-                        time.sleep(0.03)               
+                        time.sleep(0.03)
+                    self.story_ongoing = False             
 
     def update_label(self, vision_maze):
         self.maze_label1.config(text = f"{vision_maze[0][0]}", fg = "white")
@@ -241,251 +245,251 @@ class MainWindow:
             self.maze_label1.config(fg = "blue")
         elif vision_maze[0][0] == self.maze.treasure_symbol:
             self.maze_label1.config(fg = "yellow")
-        elif vision_maze[0][0] == self.maze.boss_symbol:
+        elif vision_maze[0][0] == self.maze.boss_symbol or vision_maze[0][0] == self.maze.goblin_symbol:
             self.maze_label1.config(fg = "red")
         elif vision_maze[0][0] == self.maze.torch_symbol:
             self.maze_label1.config(fg = "orange")
-        elif vision_maze[0][0] == self.maze.exit_symbol:
+        elif vision_maze[0][0] == self.maze.potion_symbol:
             self.maze_label1.config(fg = "green")
         if vision_maze[0][1] == self.maze.player_symbol:
             self.maze_label2.config(fg = "blue")
         elif vision_maze[0][1] == self.maze.treasure_symbol:
             self.maze_label2.config(fg = "yellow")
-        elif vision_maze[0][1] == self.maze.boss_symbol:
+        elif vision_maze[0][1] == self.maze.boss_symbol or vision_maze[0][1] == self.maze.goblin_symbol:
             self.maze_label2.config(fg = "red")
         elif vision_maze[0][1] == self.maze.torch_symbol:
             self.maze_label2.config(fg = "orange")
-        elif vision_maze[0][1] == self.maze.exit_symbol:
+        elif vision_maze[0][1] == self.maze.potion_symbol:
             self.maze_label2.config(fg = "green")
         if vision_maze[0][2] == self.maze.player_symbol:
             self.maze_label3.config(fg = "blue")
         elif vision_maze[0][2] == self.maze.treasure_symbol:
             self.maze_label3.config(fg = "yellow")
-        elif vision_maze[0][2] == self.maze.boss_symbol:
+        elif vision_maze[0][2] == self.maze.boss_symbol or vision_maze[0][2] == self.maze.goblin_symbol:
             self.maze_label3.config(fg = "red")
         elif vision_maze[0][2] == self.maze.torch_symbol:
             self.maze_label3.config(fg = "orange")
-        elif vision_maze[0][2] == self.maze.exit_symbol:
+        elif vision_maze[0][2] == self.maze.potion_symbol:
             self.maze_label3.config(fg = "green")
         if vision_maze[0][3] == self.maze.player_symbol:
             self.maze_label4.config(fg = "blue")
         elif vision_maze[0][3] == self.maze.treasure_symbol:
             self.maze_label4.config(fg = "yellow")
-        elif vision_maze[0][3] == self.maze.boss_symbol:
+        elif vision_maze[0][3] == self.maze.boss_symbol or vision_maze[0][3] == self.maze.goblin_symbol:
             self.maze_label4.config(fg = "red")
         elif vision_maze[0][3] == self.maze.torch_symbol:
             self.maze_label4.config(fg = "orange")
-        elif vision_maze[0][3] == self.maze.exit_symbol:
+        elif vision_maze[0][3] == self.maze.potion_symbol:
             self.maze_label4.config(fg = "green")
         if vision_maze[0][4] == self.maze.player_symbol:
             self.maze_label5.config(fg = "blue")
         elif vision_maze[0][4] == self.maze.treasure_symbol:
             self.maze_label5.config(fg = "yellow")
-        elif vision_maze[0][4] == self.maze.boss_symbol:
+        elif vision_maze[0][4] == self.maze.boss_symbol or vision_maze[0][4] == self.maze.goblin_symbol:
             self.maze_label5.config(fg = "red")
         elif vision_maze[0][4] == self.maze.torch_symbol:
             self.maze_label5.config(fg = "orange")
-        elif vision_maze[0][4] == self.maze.exit_symbol:
+        elif vision_maze[0][4] == self.maze.potion_symbol:
             self.maze_label5.config(fg = "green")
         if vision_maze[1][0] == self.maze.player_symbol:
             self.maze_label6.config(fg = "blue")
         elif vision_maze[1][0] == self.maze.treasure_symbol:
             self.maze_label6.config(fg = "yellow")
-        elif vision_maze[1][0] == self.maze.boss_symbol:
+        elif vision_maze[1][0] == self.maze.boss_symbol or vision_maze[1][0] == self.maze.goblin_symbol:
             self.maze_label6.config(fg = "red")
         elif vision_maze[1][0] == self.maze.torch_symbol:
             self.maze_label6.config(fg = "orange")
-        elif vision_maze[1][0] == self.maze.exit_symbol:
+        elif vision_maze[1][0] == self.maze.potion_symbol:
             self.maze_label6.config(fg = "green")
         if vision_maze[1][1] == self.maze.player_symbol:
             self.maze_label7.config(fg = "blue")
         elif vision_maze[1][1] == self.maze.treasure_symbol:
             self.maze_label7.config(fg = "yellow")
-        elif vision_maze[1][1] == self.maze.boss_symbol:
+        elif vision_maze[1][1] == self.maze.boss_symbol or vision_maze[1][1] == self.maze.goblin_symbol:
             self.maze_label7.config(fg = "red")
         elif vision_maze[1][1] == self.maze.torch_symbol:
             self.maze_label7.config(fg = "orange")
-        elif vision_maze[1][1] == self.maze.exit_symbol:
+        elif vision_maze[1][1] == self.maze.potion_symbol:
             self.maze_label7.config(fg = "green")
         if vision_maze[1][2] == self.maze.player_symbol:
             self.maze_label8.config(fg = "blue")
         elif vision_maze[1][2] == self.maze.treasure_symbol:
             self.maze_label8.config(fg = "yellow")
-        elif vision_maze[1][2] == self.maze.boss_symbol:
+        elif vision_maze[1][2] == self.maze.boss_symbol or vision_maze[1][2] == self.maze.goblin_symbol:
             self.maze_label8.config(fg = "red")
         elif vision_maze[1][2] == self.maze.torch_symbol:
             self.maze_label8.config(fg = "orange")
-        elif vision_maze[1][2] == self.maze.exit_symbol:
+        elif vision_maze[1][2] == self.maze.potion_symbol:
             self.maze_label8.config(fg = "green")
         if vision_maze[1][3] == self.maze.player_symbol:
             self.maze_label9.config(fg = "blue")
         elif vision_maze[1][3] == self.maze.treasure_symbol:
             self.maze_label9.config(fg = "yellow")
-        elif vision_maze[1][3] == self.maze.boss_symbol:
+        elif vision_maze[1][3] == self.maze.boss_symbol or vision_maze[1][3] == self.maze.goblin_symbol:
             self.maze_label9.config(fg = "red")
         elif vision_maze[1][3] == self.maze.torch_symbol:
             self.maze_label9.config(fg = "orange")
-        elif vision_maze[1][3] == self.maze.exit_symbol:
+        elif vision_maze[1][3] == self.maze.potion_symbol:
             self.maze_label9.config(fg = "green")
         if vision_maze[1][4] == self.maze.player_symbol:
             self.maze_label10.config(fg = "blue")
         elif vision_maze[1][4] == self.maze.treasure_symbol:
             self.maze_label10.config(fg = "yellow")
-        elif vision_maze[1][4] == self.maze.boss_symbol:
+        elif vision_maze[1][4] == self.maze.boss_symbol or vision_maze[1][4] == self.maze.goblin_symbol:
             self.maze_label10.config(fg = "red")
         elif vision_maze[1][4] == self.maze.torch_symbol:
             self.maze_label10.config(fg = "orange")
-        elif vision_maze[1][4] == self.maze.exit_symbol:
+        elif vision_maze[1][4] == self.maze.potion_symbol:
             self.maze_label10.config(fg = "green")
         if vision_maze[2][0] == self.maze.player_symbol:
             self.maze_label11.config(fg = "blue")
         elif vision_maze[2][0] == self.maze.treasure_symbol:
             self.maze_label11.config(fg = "yellow")
-        elif vision_maze[2][0] == self.maze.boss_symbol:
+        elif vision_maze[2][0] == self.maze.boss_symbol or vision_maze[2][0] == self.maze.goblin_symbol:
             self.maze_label11.config(fg = "red")
         elif vision_maze[2][0] == self.maze.torch_symbol:
             self.maze_label11.config(fg = "orange")
-        elif vision_maze[2][0] == self.maze.exit_symbol:
+        elif vision_maze[2][0] == self.maze.potion_symbol:
             self.maze_label11.config(fg = "green")
         if vision_maze[2][1] == self.maze.player_symbol:
             self.maze_label12.config(fg = "blue")
         elif vision_maze[2][1] == self.maze.treasure_symbol:
             self.maze_label12.config(fg = "yellow")
-        elif vision_maze[2][1] == self.maze.boss_symbol:
+        elif vision_maze[2][1] == self.maze.boss_symbol or vision_maze[2][1] == self.maze.goblin_symbol:
             self.maze_label12.config(fg = "red")
         elif vision_maze[2][1] == self.maze.torch_symbol:
             self.maze_label12.config(fg = "orange")
-        elif vision_maze[2][1] == self.maze.exit_symbol:
+        elif vision_maze[2][1] == self.maze.potion_symbol:
             self.maze_label12.config(fg = "green")
         if vision_maze[2][2] == self.maze.player_symbol:
             self.maze_label13.config(fg = "blue")
         elif vision_maze[2][2] == self.maze.treasure_symbol:
             self.maze_label13.config(fg = "yellow")
-        elif vision_maze[2][2] == self.maze.boss_symbol:
+        elif vision_maze[2][2] == self.maze.boss_symbol or vision_maze[2][2] == self.maze.goblin_symbol:
             self.maze_label13.config(fg = "red")
         elif vision_maze[2][2] == self.maze.torch_symbol:
             self.maze_label13.config(fg = "orange")
-        elif vision_maze[2][2] == self.maze.exit_symbol:
+        elif vision_maze[2][2] == self.maze.potion_symbol:
             self.maze_label13.config(fg = "green")
         if vision_maze[2][3] == self.maze.player_symbol:
             self.maze_label14.config(fg = "blue")
         elif vision_maze[2][3] == self.maze.treasure_symbol:
             self.maze_label14.config(fg = "yellow")
-        elif vision_maze[2][3] == self.maze.boss_symbol:
+        elif vision_maze[2][3] == self.maze.boss_symbol or vision_maze[2][3] == self.maze.goblin_symbol:
             self.maze_label14.config(fg = "red")
         elif vision_maze[2][3] == self.maze.torch_symbol:
             self.maze_label14.config(fg = "orange")
-        elif vision_maze[2][3] == self.maze.exit_symbol:
+        elif vision_maze[2][3] == self.maze.potion_symbol:
             self.maze_label14.config(fg = "green")
         if vision_maze[2][4] == self.maze.player_symbol:
             self.maze_label15.config(fg = "blue")
         elif vision_maze[2][4] == self.maze.treasure_symbol:
             self.maze_label15.config(fg = "yellow")
-        elif vision_maze[2][4] == self.maze.boss_symbol:
+        elif vision_maze[2][4] == self.maze.boss_symbol or vision_maze[2][4] == self.maze.goblin_symbol:
             self.maze_label15.config(fg = "red")
         elif vision_maze[2][4] == self.maze.torch_symbol:
             self.maze_label15.config(fg = "orange")
-        elif vision_maze[2][4] == self.maze.exit_symbol:
+        elif vision_maze[2][4] == self.maze.potion_symbol:
             self.maze_label15.config(fg = "green")
         if vision_maze[3][0] == self.maze.player_symbol:
             self.maze_label16.config(fg = "blue")
         elif vision_maze[3][0] == self.maze.treasure_symbol:
             self.maze_label16.config(fg = "yellow")
-        elif vision_maze[3][0] == self.maze.boss_symbol:
+        elif vision_maze[3][0] == self.maze.boss_symbol or vision_maze[3][0] == self.maze.goblin_symbol:
             self.maze_label16.config(fg = "red")
         elif vision_maze[3][0] == self.maze.torch_symbol:
             self.maze_label16.config(fg = "orange")
-        elif vision_maze[3][0] == self.maze.exit_symbol:
+        elif vision_maze[3][0] == self.maze.potion_symbol:
             self.maze_label16.config(fg = "green")
         if vision_maze[3][1] == self.maze.player_symbol:
             self.maze_label17.config(fg = "blue")
         elif vision_maze[3][1] == self.maze.treasure_symbol:
             self.maze_label17.config(fg = "yellow")
-        elif vision_maze[3][1] == self.maze.boss_symbol:
+        elif vision_maze[3][1] == self.maze.boss_symbol or vision_maze[3][1] == self.maze.goblin_symbol:
             self.maze_label17.config(fg = "red")
         elif vision_maze[3][1] == self.maze.torch_symbol:
             self.maze_label17.config(fg = "orange")
-        elif vision_maze[3][1] == self.maze.exit_symbol:
+        elif vision_maze[3][1] == self.maze.potion_symbol:
             self.maze_label17.config(fg = "green")
         if vision_maze[3][2] == self.maze.player_symbol:
             self.maze_label18.config(fg = "blue")
         elif vision_maze[3][2] == self.maze.treasure_symbol:
             self.maze_label18.config(fg = "yellow")
-        elif vision_maze[3][2] == self.maze.boss_symbol:
+        elif vision_maze[3][2] == self.maze.boss_symbol or vision_maze[3][2] == self.maze.goblin_symbol:
             self.maze_label18.config(fg = "red")
         elif vision_maze[3][2] == self.maze.torch_symbol:
             self.maze_label18.config(fg = "orange")
-        elif vision_maze[3][2] == self.maze.exit_symbol:
+        elif vision_maze[3][2] == self.maze.potion_symbol:
             self.maze_label18.config(fg = "green")
         if vision_maze[3][3] == self.maze.player_symbol:
             self.maze_label19.config(fg = "blue")
         elif vision_maze[3][3] == self.maze.treasure_symbol:
             self.maze_label19.config(fg = "yellow")
-        elif vision_maze[3][3] == self.maze.boss_symbol:
+        elif vision_maze[3][3] == self.maze.boss_symbol or vision_maze[3][3] == self.maze.goblin_symbol:
             self.maze_label19.config(fg = "red")
         elif vision_maze[3][3] == self.maze.torch_symbol:
             self.maze_label19.config(fg = "orange")
-        elif vision_maze[3][3] == self.maze.exit_symbol:
+        elif vision_maze[3][3] == self.maze.potion_symbol:
             self.maze_label19.config(fg = "green")
         if vision_maze[3][4] == self.maze.player_symbol:
             self.maze_label20.config(fg = "blue")
         elif vision_maze[3][4] == self.maze.treasure_symbol:
             self.maze_label20.config(fg = "yellow")
-        elif vision_maze[3][4] == self.maze.boss_symbol:
+        elif vision_maze[3][4] == self.maze.boss_symbol or vision_maze[3][4] == self.maze.goblin_symbol:
             self.maze_label20.config(fg = "red")
         elif vision_maze[3][4] == self.maze.torch_symbol:
             self.maze_label20.config(fg = "orange")
-        elif vision_maze[3][4] == self.maze.exit_symbol:
+        elif vision_maze[3][4] == self.maze.potion_symbol:
             self.maze_label20.config(fg = "green")
         if vision_maze[4][0] == self.maze.player_symbol:
             self.maze_label21.config(fg = "blue")
         elif vision_maze[4][0] == self.maze.treasure_symbol:
             self.maze_label21.config(fg = "yellow")
-        elif vision_maze[4][0] == self.maze.boss_symbol:
+        elif vision_maze[4][0] == self.maze.boss_symbol or vision_maze[4][0] == self.maze.goblin_symbol:
             self.maze_label21.config(fg = "red")
         elif vision_maze[4][0] == self.maze.torch_symbol:
             self.maze_label21.config(fg = "orange")
-        elif vision_maze[4][0] == self.maze.exit_symbol:
+        elif vision_maze[4][0] == self.maze.potion_symbol:
             self.maze_label21.config(fg = "green")
         if vision_maze[4][1] == self.maze.player_symbol:
             self.maze_label22.config(fg = "blue")
         elif vision_maze[4][1] == self.maze.treasure_symbol:
             self.maze_label22.config(fg = "yellow")
-        elif vision_maze[4][1] == self.maze.boss_symbol:
+        elif vision_maze[4][1] == self.maze.boss_symbol or vision_maze[4][1] == self.maze.goblin_symbol:
             self.maze_label22.config(fg = "red")
         elif vision_maze[4][1] == self.maze.torch_symbol:
             self.maze_label22.config(fg = "orange")
-        elif vision_maze[4][1] == self.maze.exit_symbol:
+        elif vision_maze[4][1] == self.maze.potion_symbol:
             self.maze_label22.config(fg = "green")
         if vision_maze[4][2] == self.maze.player_symbol:
             self.maze_label23.config(fg = "blue")
         elif vision_maze[4][2] == self.maze.treasure_symbol:
             self.maze_label23.config(fg = "yellow")
-        elif vision_maze[4][2] == self.maze.boss_symbol:
+        elif vision_maze[4][2] == self.maze.boss_symbol or vision_maze[4][2] == self.maze.goblin_symbol:
             self.maze_label23.config(fg = "red")
         elif vision_maze[4][2] == self.maze.torch_symbol:
             self.maze_label23.config(fg = "orange")
-        elif vision_maze[4][2] == self.maze.exit_symbol:
+        elif vision_maze[4][2] == self.maze.potion_symbol:
             self.maze_label23.config(fg = "green")
         if vision_maze[4][3] == self.maze.player_symbol:
             self.maze_label24.config(fg = "blue")
         elif vision_maze[4][3] == self.maze.treasure_symbol:
             self.maze_label24.config(fg = "yellow")
-        elif vision_maze[4][3] == self.maze.boss_symbol:
+        elif vision_maze[4][3] == self.maze.boss_symbol or vision_maze[4][3] == self.maze.goblin_symbol:
             self.maze_label24.config(fg = "red")
         elif vision_maze[4][3] == self.maze.torch_symbol:
             self.maze_label24.config(fg = "orange")
-        elif vision_maze[4][3] == self.maze.exit_symbol:
+        elif vision_maze[4][3] == self.maze.potion_symbol:
             self.maze_label24.config(fg = "green")
         if vision_maze[4][4] == self.maze.player_symbol:
             self.maze_label25.config(fg = "blue")
         elif vision_maze[4][4] == self.maze.treasure_symbol:
             self.maze_label25.config(fg = "yellow")
-        elif vision_maze[4][4] == self.maze.boss_symbol:
+        elif vision_maze[4][4] == self.maze.boss_symbol or vision_maze[4][4] == self.maze.goblin_symbol:
             self.maze_label25.config(fg = "red")
         elif vision_maze[4][4] == self.maze.torch_symbol:
             self.maze_label25.config(fg = "orange")
-        elif vision_maze[4][4] == self.maze.exit_symbol:
+        elif vision_maze[4][4] == self.maze.potion_symbol:
             self.maze_label25.config(fg = "green")
 
         self.root.update()
