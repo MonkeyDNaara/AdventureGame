@@ -82,7 +82,6 @@ class Maze:
     def show_vision_maze(self, vision_range):
         actual_pos = self.check_position(self.maze, self.player_symbol)
         vision_maze = []
-        # print("")
         for i in range(-1 * vision_range, vision_range + 1, 1):
             vision_maze_row = ""
             for j in range(-1 * vision_range, vision_range + 1, 1):
@@ -99,7 +98,6 @@ class Maze:
                 vision_maze_row += self.maze[vision_y][vision_x]
             while len(vision_maze_row) < vision_range * 2 + 1:
                 vision_maze_row += " "
-            # print(vision_maze_row)
             vision_maze.append(vision_maze_row)
         while len(vision_maze) < vision_range * 2 + 1:
             empty_string = ""
