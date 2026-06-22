@@ -19,8 +19,11 @@ story_texts = {
     "part5":    "The dark is restless here.",
     "torch_part":   "You picked up the torch.\nYou can now see around you. What a relief.",
     "boss_part" :   "You defeated the amazed boss :o",
-    "exit_part" :   "You made it, You found the exit! Congrats!"
-}
+    "exit_part" :   "You made it, You found the exit! Congrats!",
+    "potion"    :   "You found a potion",
+    "goblin"    :   "Goblin defeated",
+    "chest"     :   "You found a chest"
+    }
 
 story_positions = {
     (18, 1): "intro", 
@@ -32,6 +35,9 @@ story_positions = {
     (14, 1): "torch_part",
     (18, 10): "boss_part",
     (19, 10): "exit_part",
+    ((1, 11), (9, 11), (11, 2), (14, 11), (18, 8)): "potion",
+    ((2, 4), (4, 15), (14, 13), (15, 5)): "goblin",
+    ((1, 14), (2, 1)): "chest"
     }
 
 
