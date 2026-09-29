@@ -1,498 +1,332 @@
 import tkinter as tk
-from maze import Maze
+
 import story
-import time
+from game_logic import Fight, clean_player_name
+from maze import Maze
 
 
 class MainWindow:
-    def __init__(self, maze, vision_range = 2):
+    symbol_colors = {
+        Maze.player_symbol: "deep sky blue",
+        Maze.treasure_symbol: "gold",
+        Maze.boss_symbol: "red",
+        Maze.goblin_symbol: "red",
+        Maze.torch_symbol: "orange",
+        Maze.potion_symbol: "lime green",
+    }
+    wall_background = "gray35"
+    default_color = "white"
+    maze_background = "black"
+    typing_speed_ms = 30
+
+    def __init__(self, maze, vision_range=2):
         self.initial_maze = maze
         self.vision_range = vision_range
-        self.maze = Maze(self.initial_maze, self.vision_range)
-        self.char_name = self.maze.character.name
-        self.char_hp = self.maze.character.hp
-        self.char_attack = self.maze.character.attack
-        self.char_defense = self.maze.character.defense
-        self.story_happened = []
-        self.story_ongoing = False
+        self.grid_size = vision_range * 2 + 1
+        self.player_name = clean_player_name("")
 
         self.root = tk.Tk()
         self.root.title("Maze Runner")
-        self.root.geometry("1400x1000")
+        self.root.minsize(800, 700)
 
-        self.header = tk.Label(self.root, text="Maze Runner", font=("Arial", 30), fg='purple')
-        self.header.pack(padx=20, pady=20)
-        self.header.pack(fill="x")
-        
+        self.create_header()
+        self.create_footer()
+        self.create_status_panel()
+        self.create_maze_grid()
+        self.create_story_label()
+        self.create_name_input()
+        self.create_buttons()
+        self.bind_keys()
+
+        self.typing_job = None
+        self.new_game()
+
+    def run(self):
+        self.root.mainloop()
+
+    # ---------- widgets ----------
+
+    def create_header(self):
+        self.header = tk.Label(self.root, text="Maze Runner", font=("Arial", 30), fg="purple")
+        self.header.pack(fill="x", padx=20, pady=(20, 0))
+
+    def create_status_panel(self):
         self.statusframe = tk.Frame(self.root)
         self.statusframe.columnconfigure(0, weight=1)
         self.statusframe.columnconfigure(1, weight=1)
         self.statusframe.pack(fill="x", padx=10, pady=10)
 
         self.statsframe = tk.Frame(self.statusframe)
-        self.statsframe.columnconfigure(
-            0, weight=1
-        )
-        self.statsframe.rowconfigure(
-            0, weight=1
-        )
-        self.statsframe.rowconfigure(
-            1, weight=1)
-        self.statsframe.rowconfigure(
-            2, weight=1)
-        self.statsframe.rowconfigure(
-            3, weight=1)
-        self.statsframe.rowconfigure(
-            4, weight=1)
+        self.statsframe.columnconfigure(0, weight=1)
         self.statsframe.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        
-        self.char_name_label = tk.Label(self.statsframe, text=f"Name: {self.maze.character.name}", font=("Arial", 20))
-        self.char_name_label.grid(row=0, column=0, sticky=tk.W + tk.E, padx=0, pady=0)
 
-        self.char_level_label = tk.Label(self.statsframe, text=f"Level: {self.maze.character.level}", font=("Arial", 16))
-        self.char_level_label.grid(row=1, column=0, sticky=tk.W + tk.E, padx=0, pady=0)
+        self.char_name_label = tk.Label(self.statsframe, font=("Arial", 20))
+        self.char_level_label = tk.Label(self.statsframe, font=("Arial", 16))
+        self.char_exp_label = tk.Label(self.statsframe, font=("Arial", 16))
+        self.char_hp_label = tk.Label(self.statsframe, font=("Arial", 16))
+        self.char_attack_label = tk.Label(self.statsframe, font=("Arial", 16))
+        self.char_defense_label = tk.Label(self.statsframe, font=("Arial", 16))
+        stat_labels = [
+            self.char_name_label,
+            self.char_level_label,
+            self.char_exp_label,
+            self.char_hp_label,
+            self.char_attack_label,
+            self.char_defense_label,
+        ]
+        for row, label in enumerate(stat_labels):
+            label.grid(row=row, column=0, sticky=tk.W + tk.E)
 
-        self.char_hp_label = tk.Label(self.statsframe, text=f"HP: {self.maze.character.actual_hp}/{self.maze.character.hp}", font=("Arial", 16))
-        self.char_hp_label.grid(row=2, column=0, sticky=tk.W + tk.E, padx=0, pady=0)
-
-        self.char_attack_label = tk.Label(self.statsframe, text=f"Attack: {self.maze.character.attack}", font=("Arial", 16))
-        self.char_attack_label.grid(row=3, column=0, sticky=tk.W + tk.E, padx=0, pady=0)
-
-        self.char_defense_label = tk.Label(self.statsframe, text=f"Defense: {self.maze.character.defense}", font=("Arial", 16))
-        self.char_defense_label.grid(row=4, column=0, sticky=tk.W + tk.E, padx=0, pady=0)
+        self.enemy_label = tk.Label(self.statsframe, text="", font=("Arial", 16, "bold"), fg="red")
+        self.enemy_label.grid(row=len(stat_labels), column=0, sticky=tk.W + tk.E, pady=(10, 0))
 
         self.inventory_frame = tk.Frame(self.statusframe)
-        self.inventory_frame.rowconfigure(0, weight=1)
-        self.inventory_frame.rowconfigure(1, weight=4)
+        self.inventory_frame.grid(row=0, column=1, sticky=tk.W + tk.E + tk.N, padx=10, pady=10)
         self.inventory_label = tk.Label(self.inventory_frame, text="Inventory:", font=("Arial", 20))
-        self.inventory_label.grid(row=0, column=0, sticky=tk.W + tk.E, padx=0, pady=0)
-        self.inventory_items_label = tk.Label(self.inventory_frame, text=f" ", font=("Arial", 16))
-        self.inventory_items_label.grid(row=1, column=0, sticky=tk.W + tk.E, padx=0, pady=0)
-        self.inventory_frame.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.inventory_frame.grid(row=0, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
+        self.inventory_label.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.inventory_items_label = tk.Label(self.inventory_frame, text="", font=("Arial", 16), justify="left")
+        self.inventory_items_label.grid(row=1, column=0, sticky=tk.W + tk.E)
 
-        self.maze_frame = tk.Frame(self.root)
-        self.maze_frame.columnconfigure(0, weight = 1)
-        self.maze_frame.columnconfigure(1, weight = 1)
-        self.maze_frame.columnconfigure(2, weight = 1)
-        self.maze_frame.columnconfigure(3, weight = 1)
-        self.maze_frame.columnconfigure(4, weight = 1)
-        self.maze_frame.rowconfigure(0, weight = 1)
-        self.maze_frame.rowconfigure(1, weight = 1)
-        self.maze_frame.rowconfigure(2, weight = 1)
-        self.maze_frame.rowconfigure(3, weight = 1)
-        self.maze_frame.rowconfigure(4, weight = 1)
-        self.maze_label1 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label1.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label2 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label2.grid(row=0, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label3 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label3.grid(row=0, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label4 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label4.grid(row=0, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label5 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label5.grid(row=0, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label6 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label6.grid(row=1, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label7 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label7.grid(row=1, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label8 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label8.grid(row=1, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label9 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label9.grid(row=1, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label10 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label10.grid(row=1, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label11 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label11.grid(row=2, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label12 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20), fg = "blue")
-        self.maze_label12.grid(row=2, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label13 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label13.grid(row=2, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label14 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label14.grid(row=2, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label15 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label15.grid(row=2, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label16 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label16.grid(row=3, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label17 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label17.grid(row=3, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label18 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label18.grid(row=3, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label19 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label19.grid(row=3, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label20 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label20.grid(row=3, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label21 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label21.grid(row=4, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label22 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label22.grid(row=4, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label23 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label23.grid(row=4, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label24 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label24.grid(row=4, column=3, sticky=tk.W + tk.E, padx=10, pady=10)
-        self.maze_label25 = tk.Label(self.maze_frame, text=f" ", font=("Arial", 20))
-        self.maze_label25.grid(row=4, column=4, sticky=tk.W + tk.E, padx=10, pady=10)
+    def create_maze_grid(self):
+        self.maze_frame = tk.Frame(self.root, bg=self.maze_background, padx=10, pady=10)
+        self.maze_labels = []
+        for row in range(self.grid_size):
+            label_row = []
+            for column in range(self.grid_size):
+                label = tk.Label(
+                    self.maze_frame,
+                    text=" ",
+                    width=2,
+                    font=("Courier", 26, "bold"),
+                    bg=self.maze_background,
+                    fg=self.default_color,
+                )
+                label.grid(row=row, column=column, padx=1, pady=1)
+                label_row.append(label)
+            self.maze_labels.append(label_row)
         self.maze_frame.pack(pady=10, padx=10)
-        self.story_label = tk.Label(self.root, text="Press Enter to start the game", font=("Arial", 16))
+
+    def create_story_label(self):
+        self.story_label = tk.Label(self.root, text="", font=("Arial", 16), height=7)
         self.story_label.pack(pady=10, padx=10)
 
+    def create_name_input(self):
+        self.name_frame = tk.Frame(self.root)
+        self.name_label = tk.Label(self.name_frame, text="Your name:", font=("Arial", 16))
+        self.name_label.grid(row=0, column=0, padx=5)
+        self.name_entry = tk.Entry(self.name_frame, font=("Arial", 16), width=16, justify="center")
+        self.name_entry.grid(row=0, column=1, padx=5)
+        self.name_frame.pack(pady=(0, 10))
+        self.name_entry.focus_set()
+
+    def create_buttons(self):
         buttonframe = tk.Frame(self.root)
-        buttonframe.columnconfigure(
-            0, weight=1
-        )
-        buttonframe.columnconfigure(
-            1, weight=1
-        )
-        buttonframe.columnconfigure(2, weight=1)
-        self.attack_button = tk.Button(
-            buttonframe,
-            text="Attack",
-            font=("Arial", 16)
-        )
-        # self.attack_button.grid(row=0, column=0, sticky=tk.W + tk.E, padx=10, pady=10)
-
-        self.defend_button = tk.Button(
-            buttonframe,
-            text="Defend",
-            font=("Arial", 16)
-        )
-        # self.defend_button.grid(row=0, column=1, sticky=tk.W + tk.E, padx=10, pady=10)
-
-        self.potion_button = tk.Button(
-            buttonframe,
-            text="Potion",
-            font=("Arial", 16),
-            command = self.use_potion
-        )
-        self.potion_button.grid(row=0, column=2, sticky=tk.W + tk.E, padx=10, pady=10)
-
+        self.attack_button = tk.Button(buttonframe, text="Attack (1)", font=("Arial", 16), command=lambda: self.fight_turn("attack"))
+        self.defend_button = tk.Button(buttonframe, text="Defend (2)", font=("Arial", 16), command=lambda: self.fight_turn("defend"))
+        self.potion_button = tk.Button(buttonframe, text="Potion (3)", font=("Arial", 16), command=self.use_potion)
+        self.flee_button = tk.Button(buttonframe, text="Flee (4)", font=("Arial", 16), command=lambda: self.fight_turn("flee"))
+        self.fight_buttons = [self.attack_button, self.defend_button, self.flee_button]
+        for column, button in enumerate([self.attack_button, self.defend_button, self.potion_button, self.flee_button]):
+            buttonframe.columnconfigure(column, weight=1)
+            button.grid(row=0, column=column, sticky=tk.W + tk.E, padx=10, pady=10)
         buttonframe.pack(fill="x", pady=10, padx=10)
 
-        self.copyright_label = tk.Label(self.root, text="© Eric & Niko", font=("Arial", 12), fg='gray')
+    def create_footer(self):
+        self.copyright_label = tk.Label(self.root, text="© Eric & Niko", font=("Arial", 12), fg="gray")
         self.copyright_label.pack(side="bottom", pady=10)
 
-        self.root.update()
-        self.root.bind("<w>", self.key_event)
-        self.root.bind("<a>", self.key_event)
-        self.root.bind("<s>", self.key_event)
-        self.root.bind("<d>", self.key_event)
-        self.root.bind("<q>", self.key_event)
-        self.root.bind("<Enter>", self.key_event)
+    def bind_keys(self):
+        for key in Maze.directions:
+            self.root.bind(f"<{key}>", self.move_player)
+        self.root.bind("<Return>", self.on_return)
+        self.root.bind("<Key-1>", lambda event: self.fight_turn("attack"))
+        self.root.bind("<Key-2>", lambda event: self.fight_turn("defend"))
+        self.root.bind("<Key-3>", lambda event: self.use_potion())
+        self.root.bind("<Key-4>", lambda event: self.fight_turn("flee"))
 
-        self.root.mainloop()
-    
-    def use_potion(self):
-        self.maze.character.use_potion()
+    # ---------- game flow ----------
+
+    def new_game(self):
+        self.maze = Maze(self.initial_maze, self.vision_range, self.player_name)
+        self.story_happened = []
+        self.stop_typing()
+        self.game_started = False
+        self.game_over = False
+        self.fight = None
+        self.clear_maze_grid()
+        self.story_label.config(text="Type in your name and press Enter to start the game")
         self.update_stats()
+        self.update_buttons()
 
-    def key_event(self, event):
-        if not self.maze.character.be_infight and not self.story_ongoing == True and (event.keysym == "w" or event.keysym == "a" or event.keysym == "s" or event.keysym == "d"):
-            actual_vision_maze = self.maze.check_action(event.keysym)
+    def on_return(self, event=None):
+        if self.game_over:
+            self.new_game()
+            self.start_game()
+        elif not self.game_started:
+            self.set_player_name()
+            self.start_game()
+
+    def set_player_name(self):
+        # the name is only asked once, a restart keeps it
+        self.player_name = clean_player_name(self.name_entry.get())
+        self.maze.character.name = self.player_name
+        self.name_frame.pack_forget()
+        self.root.focus_set()
+
+    def start_game(self):
+        self.game_started = True
+        self.update_stats()
+        self.update_buttons()
+        self.update_maze_grid()
+        self.update_story_label(self.maze.player_pos)
+
+    def move_player(self, event):
+        if not self.game_started or self.game_over or self.story_ongoing or self.fight:
+            return
+        enemy = self.maze.check_action(event.keysym)
+        self.update_maze_grid()
+        self.update_stats()
+        if enemy:
+            self.start_fight(enemy)
+        elif self.maze.reached_exit:
+            self.end_game(story.story_texts["exit_part"].format(name=self.player_name))
         else:
-            actual_vision_maze = self.maze.check_action()
-        self.update_label(actual_vision_maze)
-        self.update_story_label(self.maze.check_position(self.maze.maze, self.maze.player_symbol))
+            self.update_story_label(self.maze.player_pos)
+
+    def end_game(self, text):
+        self.game_over = True
+        self.update_buttons()
+        self.type_text(f"{text}\n\nPress Enter to play again.")
+
+    # ---------- fighting ----------
+
+    def start_fight(self, enemy):
+        self.fight = Fight(self.maze.character, enemy)
+        intro = story.story_texts.get(enemy.name.lower(), f"A {enemy.name} appears!")
+        self.show_text(f"{intro}\nAttack, defend, drink a potion or try to flee.")
         self.update_stats()
+        self.update_buttons()
+
+    def fight_turn(self, action):
+        if self.fight is None or self.story_ongoing:
+            return
+        fight_round = self.fight.round
+        if action == "attack":
+            log = self.fight.player_attack()
+        elif action == "defend":
+            log = self.fight.player_defend()
+        elif action == "potion":
+            log = self.fight.player_use_potion()
+        else:
+            log = self.fight.player_flee()
+        self.show_text(f"Round {fight_round}\n" + "\n".join(log))
+
+        if self.fight.is_over:
+            self.finish_fight()
+        self.update_stats()
+        self.update_buttons()
+
+    def finish_fight(self):
+        fight = self.fight
+        self.fight = None
+        if fight.player_won():
+            self.maze.remove_enemy(fight.enemy)
+            self.update_maze_grid()
+        elif not self.maze.character.is_alive():
+            self.game_over = True
+            self.story_label.config(text=self.story_label.cget("text") + f"\n{story.story_texts['game_over']} - Press Enter to try again.")
+
+    def use_potion(self):
+        if not self.game_started or self.game_over:
+            return
+        if self.fight:
+            self.fight_turn("potion")
+            return
+        _, message = self.maze.character.use_potion()
+        self.show_text(message)
+        self.update_stats()
+
+    # ---------- drawing ----------
 
     def update_stats(self):
-        self.char_level_label.config(text=f"Level: {self.maze.character.level}")
-        self.char_hp_label.config(text=f"HP: {self.maze.character.actual_hp}/{self.maze.character.hp}")
-        self.char_attack_label.config(text=f"Attack: {self.maze.character.attack}")
-        self.char_defense_label.config(text=f"Defense: {self.maze.character.defense}")
-        self.inventory_items_label.config(text = f"{'\n'.join([f"{item.name}: +{item.attack} attack, +{item.defense} defense, +{item.heal} heal" for item in self.maze.character.inventory])}")
+        character = self.maze.character
+        name = character.name if self.game_started else "?"
+        self.char_name_label.config(text=f"Name: {name}")
+        self.char_level_label.config(text=f"Level: {character.level}")
+        self.char_exp_label.config(text=f"EXP: {character.exp}/{character.exp_needed()}")
+        self.char_hp_label.config(text=f"HP: {character.actual_hp}/{character.hp}")
+        self.char_attack_label.config(text=f"Attack: {character.attack}")
+        self.char_defense_label.config(text=f"Defense: {character.defense}")
+        self.inventory_items_label.config(text=self.inventory_text(character.inventory))
+
+        if self.fight:
+            enemy = self.fight.enemy
+            self.enemy_label.config(text=f"{enemy.name}: {enemy.actual_hp}/{enemy.hp} HP")
+        else:
+            self.enemy_label.config(text="")
+
+    def inventory_text(self, inventory):
+        # potions are stacked, e.g. "Small Potion (+10 HP) x2"
+        item_counts = {}
+        for item in inventory:
+            item_counts[item] = item_counts.get(item, 0) + 1
+        lines = []
+        for item, count in item_counts.items():
+            line = item.describe()
+            if count > 1:
+                line += f" x{count}"
+            lines.append(line)
+        return "\n".join(lines)
+
+    def update_buttons(self):
+        state = tk.NORMAL if self.fight else tk.DISABLED
+        for button in self.fight_buttons:
+            button.config(state=state)
+        potion_state = tk.NORMAL if self.game_started and not self.game_over else tk.DISABLED
+        self.potion_button.config(state=potion_state)
+
+    def show_text(self, text):
+        # instant text for fight messages
+        self.stop_typing()
+        self.story_label.config(text=text)
+
+    def stop_typing(self):
+        if self.typing_job is not None:
+            self.root.after_cancel(self.typing_job)
+            self.typing_job = None
+        self.story_ongoing = False
+
+    def clear_maze_grid(self):
+        for label_row in self.maze_labels:
+            for label in label_row:
+                label.config(text=" ", bg=self.maze_background)
+
+    def update_maze_grid(self):
+        vision_maze = self.maze.show_vision_maze()
+        for row, label_row in enumerate(self.maze_labels):
+            for column, label in enumerate(label_row):
+                symbol = vision_maze[row][column]
+                if symbol == Maze.wall_symbol:
+                    # walls are drawn as filled tiles instead of the letter
+                    label.config(text=" ", bg=self.wall_background)
+                else:
+                    color = self.symbol_colors.get(symbol, self.default_color)
+                    label.config(text=symbol, fg=color, bg=self.maze_background)
 
     def update_story_label(self, actual_pos):
-            if actual_pos in story.story_positions:
-                if actual_pos not in self.story_happened:
-                    self.story_ongoing = True
-                    story_text = ""
-                    self.story_label.config(text = " ")
-                    self.story_happened.append(actual_pos)
-                    for char in story.story_texts[story.story_positions[actual_pos]]:
-                        story_text += char
-                        self.story_label.config(text = story_text)
-                        self.root.update()
-                        time.sleep(0.03)
-                    self.story_ongoing = False             
+        if actual_pos not in story.story_positions or actual_pos in self.story_happened:
+            return
+        self.story_happened.append(actual_pos)
+        self.type_text(story.story_texts[story.story_positions[actual_pos]])
 
-    def update_label(self, vision_maze):
-        self.maze_label1.config(text = f"{vision_maze[0][0]}", fg = "white")
-        self.maze_label2.config(text = f"{vision_maze[0][1]}", fg = "white")
-        self.maze_label3.config(text = f"{vision_maze[0][2]}", fg = "white")
-        self.maze_label4.config(text = f"{vision_maze[0][3]}", fg = "white")
-        self.maze_label5.config(text = f"{vision_maze[0][4]}", fg = "white")
-        self.maze_label6.config(text = f"{vision_maze[1][0]}", fg = "white")
-        self.maze_label7.config(text = f"{vision_maze[1][1]}", fg = "white")
-        self.maze_label8.config(text = f"{vision_maze[1][2]}", fg = "white")
-        self.maze_label9.config(text = f"{vision_maze[1][3]}", fg = "white")
-        self.maze_label10.config(text = f"{vision_maze[1][4]}", fg = "white")
-        self.maze_label11.config(text = f"{vision_maze[2][0]}", fg = "white")
-        self.maze_label12.config(text = f"{vision_maze[2][1]}", fg = "white")
-        self.maze_label13.config(text = f"{vision_maze[2][2]}", fg = "white")
-        self.maze_label14.config(text = f"{vision_maze[2][3]}", fg = "white")
-        self.maze_label15.config(text = f"{vision_maze[2][4]}", fg = "white")
-        self.maze_label16.config(text = f"{vision_maze[3][0]}", fg = "white")
-        self.maze_label17.config(text = f"{vision_maze[3][1]}", fg = "white")
-        self.maze_label18.config(text = f"{vision_maze[3][2]}", fg = "white")
-        self.maze_label19.config(text = f"{vision_maze[3][3]}", fg = "white")
-        self.maze_label20.config(text = f"{vision_maze[3][4]}", fg = "white")
-        self.maze_label21.config(text = f"{vision_maze[4][0]}", fg = "white")
-        self.maze_label22.config(text = f"{vision_maze[4][1]}", fg = "white")
-        self.maze_label23.config(text = f"{vision_maze[4][2]}", fg = "white")
-        self.maze_label24.config(text = f"{vision_maze[4][3]}", fg = "white")
-        self.maze_label25.config(text = f"{vision_maze[4][4]}", fg = "white")
-        if vision_maze[0][0] == self.maze.player_symbol:
-            self.maze_label1.config(fg = "blue")
-        elif vision_maze[0][0] == self.maze.treasure_symbol:
-            self.maze_label1.config(fg = "yellow")
-        elif vision_maze[0][0] == self.maze.boss_symbol or vision_maze[0][0] == self.maze.goblin_symbol:
-            self.maze_label1.config(fg = "red")
-        elif vision_maze[0][0] == self.maze.torch_symbol:
-            self.maze_label1.config(fg = "orange")
-        elif vision_maze[0][0] == self.maze.potion_symbol:
-            self.maze_label1.config(fg = "green")
-        if vision_maze[0][1] == self.maze.player_symbol:
-            self.maze_label2.config(fg = "blue")
-        elif vision_maze[0][1] == self.maze.treasure_symbol:
-            self.maze_label2.config(fg = "yellow")
-        elif vision_maze[0][1] == self.maze.boss_symbol or vision_maze[0][1] == self.maze.goblin_symbol:
-            self.maze_label2.config(fg = "red")
-        elif vision_maze[0][1] == self.maze.torch_symbol:
-            self.maze_label2.config(fg = "orange")
-        elif vision_maze[0][1] == self.maze.potion_symbol:
-            self.maze_label2.config(fg = "green")
-        if vision_maze[0][2] == self.maze.player_symbol:
-            self.maze_label3.config(fg = "blue")
-        elif vision_maze[0][2] == self.maze.treasure_symbol:
-            self.maze_label3.config(fg = "yellow")
-        elif vision_maze[0][2] == self.maze.boss_symbol or vision_maze[0][2] == self.maze.goblin_symbol:
-            self.maze_label3.config(fg = "red")
-        elif vision_maze[0][2] == self.maze.torch_symbol:
-            self.maze_label3.config(fg = "orange")
-        elif vision_maze[0][2] == self.maze.potion_symbol:
-            self.maze_label3.config(fg = "green")
-        if vision_maze[0][3] == self.maze.player_symbol:
-            self.maze_label4.config(fg = "blue")
-        elif vision_maze[0][3] == self.maze.treasure_symbol:
-            self.maze_label4.config(fg = "yellow")
-        elif vision_maze[0][3] == self.maze.boss_symbol or vision_maze[0][3] == self.maze.goblin_symbol:
-            self.maze_label4.config(fg = "red")
-        elif vision_maze[0][3] == self.maze.torch_symbol:
-            self.maze_label4.config(fg = "orange")
-        elif vision_maze[0][3] == self.maze.potion_symbol:
-            self.maze_label4.config(fg = "green")
-        if vision_maze[0][4] == self.maze.player_symbol:
-            self.maze_label5.config(fg = "blue")
-        elif vision_maze[0][4] == self.maze.treasure_symbol:
-            self.maze_label5.config(fg = "yellow")
-        elif vision_maze[0][4] == self.maze.boss_symbol or vision_maze[0][4] == self.maze.goblin_symbol:
-            self.maze_label5.config(fg = "red")
-        elif vision_maze[0][4] == self.maze.torch_symbol:
-            self.maze_label5.config(fg = "orange")
-        elif vision_maze[0][4] == self.maze.potion_symbol:
-            self.maze_label5.config(fg = "green")
-        if vision_maze[1][0] == self.maze.player_symbol:
-            self.maze_label6.config(fg = "blue")
-        elif vision_maze[1][0] == self.maze.treasure_symbol:
-            self.maze_label6.config(fg = "yellow")
-        elif vision_maze[1][0] == self.maze.boss_symbol or vision_maze[1][0] == self.maze.goblin_symbol:
-            self.maze_label6.config(fg = "red")
-        elif vision_maze[1][0] == self.maze.torch_symbol:
-            self.maze_label6.config(fg = "orange")
-        elif vision_maze[1][0] == self.maze.potion_symbol:
-            self.maze_label6.config(fg = "green")
-        if vision_maze[1][1] == self.maze.player_symbol:
-            self.maze_label7.config(fg = "blue")
-        elif vision_maze[1][1] == self.maze.treasure_symbol:
-            self.maze_label7.config(fg = "yellow")
-        elif vision_maze[1][1] == self.maze.boss_symbol or vision_maze[1][1] == self.maze.goblin_symbol:
-            self.maze_label7.config(fg = "red")
-        elif vision_maze[1][1] == self.maze.torch_symbol:
-            self.maze_label7.config(fg = "orange")
-        elif vision_maze[1][1] == self.maze.potion_symbol:
-            self.maze_label7.config(fg = "green")
-        if vision_maze[1][2] == self.maze.player_symbol:
-            self.maze_label8.config(fg = "blue")
-        elif vision_maze[1][2] == self.maze.treasure_symbol:
-            self.maze_label8.config(fg = "yellow")
-        elif vision_maze[1][2] == self.maze.boss_symbol or vision_maze[1][2] == self.maze.goblin_symbol:
-            self.maze_label8.config(fg = "red")
-        elif vision_maze[1][2] == self.maze.torch_symbol:
-            self.maze_label8.config(fg = "orange")
-        elif vision_maze[1][2] == self.maze.potion_symbol:
-            self.maze_label8.config(fg = "green")
-        if vision_maze[1][3] == self.maze.player_symbol:
-            self.maze_label9.config(fg = "blue")
-        elif vision_maze[1][3] == self.maze.treasure_symbol:
-            self.maze_label9.config(fg = "yellow")
-        elif vision_maze[1][3] == self.maze.boss_symbol or vision_maze[1][3] == self.maze.goblin_symbol:
-            self.maze_label9.config(fg = "red")
-        elif vision_maze[1][3] == self.maze.torch_symbol:
-            self.maze_label9.config(fg = "orange")
-        elif vision_maze[1][3] == self.maze.potion_symbol:
-            self.maze_label9.config(fg = "green")
-        if vision_maze[1][4] == self.maze.player_symbol:
-            self.maze_label10.config(fg = "blue")
-        elif vision_maze[1][4] == self.maze.treasure_symbol:
-            self.maze_label10.config(fg = "yellow")
-        elif vision_maze[1][4] == self.maze.boss_symbol or vision_maze[1][4] == self.maze.goblin_symbol:
-            self.maze_label10.config(fg = "red")
-        elif vision_maze[1][4] == self.maze.torch_symbol:
-            self.maze_label10.config(fg = "orange")
-        elif vision_maze[1][4] == self.maze.potion_symbol:
-            self.maze_label10.config(fg = "green")
-        if vision_maze[2][0] == self.maze.player_symbol:
-            self.maze_label11.config(fg = "blue")
-        elif vision_maze[2][0] == self.maze.treasure_symbol:
-            self.maze_label11.config(fg = "yellow")
-        elif vision_maze[2][0] == self.maze.boss_symbol or vision_maze[2][0] == self.maze.goblin_symbol:
-            self.maze_label11.config(fg = "red")
-        elif vision_maze[2][0] == self.maze.torch_symbol:
-            self.maze_label11.config(fg = "orange")
-        elif vision_maze[2][0] == self.maze.potion_symbol:
-            self.maze_label11.config(fg = "green")
-        if vision_maze[2][1] == self.maze.player_symbol:
-            self.maze_label12.config(fg = "blue")
-        elif vision_maze[2][1] == self.maze.treasure_symbol:
-            self.maze_label12.config(fg = "yellow")
-        elif vision_maze[2][1] == self.maze.boss_symbol or vision_maze[2][1] == self.maze.goblin_symbol:
-            self.maze_label12.config(fg = "red")
-        elif vision_maze[2][1] == self.maze.torch_symbol:
-            self.maze_label12.config(fg = "orange")
-        elif vision_maze[2][1] == self.maze.potion_symbol:
-            self.maze_label12.config(fg = "green")
-        if vision_maze[2][2] == self.maze.player_symbol:
-            self.maze_label13.config(fg = "blue")
-        elif vision_maze[2][2] == self.maze.treasure_symbol:
-            self.maze_label13.config(fg = "yellow")
-        elif vision_maze[2][2] == self.maze.boss_symbol or vision_maze[2][2] == self.maze.goblin_symbol:
-            self.maze_label13.config(fg = "red")
-        elif vision_maze[2][2] == self.maze.torch_symbol:
-            self.maze_label13.config(fg = "orange")
-        elif vision_maze[2][2] == self.maze.potion_symbol:
-            self.maze_label13.config(fg = "green")
-        if vision_maze[2][3] == self.maze.player_symbol:
-            self.maze_label14.config(fg = "blue")
-        elif vision_maze[2][3] == self.maze.treasure_symbol:
-            self.maze_label14.config(fg = "yellow")
-        elif vision_maze[2][3] == self.maze.boss_symbol or vision_maze[2][3] == self.maze.goblin_symbol:
-            self.maze_label14.config(fg = "red")
-        elif vision_maze[2][3] == self.maze.torch_symbol:
-            self.maze_label14.config(fg = "orange")
-        elif vision_maze[2][3] == self.maze.potion_symbol:
-            self.maze_label14.config(fg = "green")
-        if vision_maze[2][4] == self.maze.player_symbol:
-            self.maze_label15.config(fg = "blue")
-        elif vision_maze[2][4] == self.maze.treasure_symbol:
-            self.maze_label15.config(fg = "yellow")
-        elif vision_maze[2][4] == self.maze.boss_symbol or vision_maze[2][4] == self.maze.goblin_symbol:
-            self.maze_label15.config(fg = "red")
-        elif vision_maze[2][4] == self.maze.torch_symbol:
-            self.maze_label15.config(fg = "orange")
-        elif vision_maze[2][4] == self.maze.potion_symbol:
-            self.maze_label15.config(fg = "green")
-        if vision_maze[3][0] == self.maze.player_symbol:
-            self.maze_label16.config(fg = "blue")
-        elif vision_maze[3][0] == self.maze.treasure_symbol:
-            self.maze_label16.config(fg = "yellow")
-        elif vision_maze[3][0] == self.maze.boss_symbol or vision_maze[3][0] == self.maze.goblin_symbol:
-            self.maze_label16.config(fg = "red")
-        elif vision_maze[3][0] == self.maze.torch_symbol:
-            self.maze_label16.config(fg = "orange")
-        elif vision_maze[3][0] == self.maze.potion_symbol:
-            self.maze_label16.config(fg = "green")
-        if vision_maze[3][1] == self.maze.player_symbol:
-            self.maze_label17.config(fg = "blue")
-        elif vision_maze[3][1] == self.maze.treasure_symbol:
-            self.maze_label17.config(fg = "yellow")
-        elif vision_maze[3][1] == self.maze.boss_symbol or vision_maze[3][1] == self.maze.goblin_symbol:
-            self.maze_label17.config(fg = "red")
-        elif vision_maze[3][1] == self.maze.torch_symbol:
-            self.maze_label17.config(fg = "orange")
-        elif vision_maze[3][1] == self.maze.potion_symbol:
-            self.maze_label17.config(fg = "green")
-        if vision_maze[3][2] == self.maze.player_symbol:
-            self.maze_label18.config(fg = "blue")
-        elif vision_maze[3][2] == self.maze.treasure_symbol:
-            self.maze_label18.config(fg = "yellow")
-        elif vision_maze[3][2] == self.maze.boss_symbol or vision_maze[3][2] == self.maze.goblin_symbol:
-            self.maze_label18.config(fg = "red")
-        elif vision_maze[3][2] == self.maze.torch_symbol:
-            self.maze_label18.config(fg = "orange")
-        elif vision_maze[3][2] == self.maze.potion_symbol:
-            self.maze_label18.config(fg = "green")
-        if vision_maze[3][3] == self.maze.player_symbol:
-            self.maze_label19.config(fg = "blue")
-        elif vision_maze[3][3] == self.maze.treasure_symbol:
-            self.maze_label19.config(fg = "yellow")
-        elif vision_maze[3][3] == self.maze.boss_symbol or vision_maze[3][3] == self.maze.goblin_symbol:
-            self.maze_label19.config(fg = "red")
-        elif vision_maze[3][3] == self.maze.torch_symbol:
-            self.maze_label19.config(fg = "orange")
-        elif vision_maze[3][3] == self.maze.potion_symbol:
-            self.maze_label19.config(fg = "green")
-        if vision_maze[3][4] == self.maze.player_symbol:
-            self.maze_label20.config(fg = "blue")
-        elif vision_maze[3][4] == self.maze.treasure_symbol:
-            self.maze_label20.config(fg = "yellow")
-        elif vision_maze[3][4] == self.maze.boss_symbol or vision_maze[3][4] == self.maze.goblin_symbol:
-            self.maze_label20.config(fg = "red")
-        elif vision_maze[3][4] == self.maze.torch_symbol:
-            self.maze_label20.config(fg = "orange")
-        elif vision_maze[3][4] == self.maze.potion_symbol:
-            self.maze_label20.config(fg = "green")
-        if vision_maze[4][0] == self.maze.player_symbol:
-            self.maze_label21.config(fg = "blue")
-        elif vision_maze[4][0] == self.maze.treasure_symbol:
-            self.maze_label21.config(fg = "yellow")
-        elif vision_maze[4][0] == self.maze.boss_symbol or vision_maze[4][0] == self.maze.goblin_symbol:
-            self.maze_label21.config(fg = "red")
-        elif vision_maze[4][0] == self.maze.torch_symbol:
-            self.maze_label21.config(fg = "orange")
-        elif vision_maze[4][0] == self.maze.potion_symbol:
-            self.maze_label21.config(fg = "green")
-        if vision_maze[4][1] == self.maze.player_symbol:
-            self.maze_label22.config(fg = "blue")
-        elif vision_maze[4][1] == self.maze.treasure_symbol:
-            self.maze_label22.config(fg = "yellow")
-        elif vision_maze[4][1] == self.maze.boss_symbol or vision_maze[4][1] == self.maze.goblin_symbol:
-            self.maze_label22.config(fg = "red")
-        elif vision_maze[4][1] == self.maze.torch_symbol:
-            self.maze_label22.config(fg = "orange")
-        elif vision_maze[4][1] == self.maze.potion_symbol:
-            self.maze_label22.config(fg = "green")
-        if vision_maze[4][2] == self.maze.player_symbol:
-            self.maze_label23.config(fg = "blue")
-        elif vision_maze[4][2] == self.maze.treasure_symbol:
-            self.maze_label23.config(fg = "yellow")
-        elif vision_maze[4][2] == self.maze.boss_symbol or vision_maze[4][2] == self.maze.goblin_symbol:
-            self.maze_label23.config(fg = "red")
-        elif vision_maze[4][2] == self.maze.torch_symbol:
-            self.maze_label23.config(fg = "orange")
-        elif vision_maze[4][2] == self.maze.potion_symbol:
-            self.maze_label23.config(fg = "green")
-        if vision_maze[4][3] == self.maze.player_symbol:
-            self.maze_label24.config(fg = "blue")
-        elif vision_maze[4][3] == self.maze.treasure_symbol:
-            self.maze_label24.config(fg = "yellow")
-        elif vision_maze[4][3] == self.maze.boss_symbol or vision_maze[4][3] == self.maze.goblin_symbol:
-            self.maze_label24.config(fg = "red")
-        elif vision_maze[4][3] == self.maze.torch_symbol:
-            self.maze_label24.config(fg = "orange")
-        elif vision_maze[4][3] == self.maze.potion_symbol:
-            self.maze_label24.config(fg = "green")
-        if vision_maze[4][4] == self.maze.player_symbol:
-            self.maze_label25.config(fg = "blue")
-        elif vision_maze[4][4] == self.maze.treasure_symbol:
-            self.maze_label25.config(fg = "yellow")
-        elif vision_maze[4][4] == self.maze.boss_symbol or vision_maze[4][4] == self.maze.goblin_symbol:
-            self.maze_label25.config(fg = "red")
-        elif vision_maze[4][4] == self.maze.torch_symbol:
-            self.maze_label25.config(fg = "orange")
-        elif vision_maze[4][4] == self.maze.potion_symbol:
-            self.maze_label25.config(fg = "green")
-
-        self.root.update()
-    
-    
-    
+    def type_text(self, text, index=0):
+        # writes the text letter by letter without freezing the window
+        if index == 0:
+            self.stop_typing()
+            self.story_ongoing = True
+        self.story_label.config(text=text[:index])
+        if index < len(text):
+            self.typing_job = self.root.after(self.typing_speed_ms, self.type_text, text, index + 1)
+        else:
+            self.typing_job = None
+            self.story_ongoing = False
