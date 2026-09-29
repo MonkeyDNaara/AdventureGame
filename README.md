@@ -8,6 +8,7 @@ A small dungeon-crawler built with Python and Tkinter, done together with Eric. 
 - Character stats: HP, attack, defense, EXP and leveling (`game_logic.py`)
 - Round-based fights: every button press is one round — attack, defend (halves the damage you take), drink a potion or try to flee. If you flee, the enemy keeps its damage for the next try
 - Goblins to fight, potions and chests to find, and a boss guarding the exit
+- Type in your own hero name on the start screen (it stays the same when you restart)
 - Game over when your HP hits 0, press Enter to try again
 - Story text tied to specific positions in the maze (`story.py`) — walking into certain tiles triggers narrative snippets, so exploring feels a bit more alive than just "you moved"
 - Full Tkinter GUI (`gui.py`) showing the maze, stats panel, inventory and story log
@@ -16,7 +17,7 @@ A small dungeon-crawler built with Python and Tkinter, done together with Eric. 
 
 | Key | Action |
 | --- | --- |
-| `Enter` | Start / restart the game |
+| `Enter` | Start the game after typing your name / restart |
 | `W` `A` `S` `D` | Move |
 | `1` | Attack |
 | `2` | Defend |

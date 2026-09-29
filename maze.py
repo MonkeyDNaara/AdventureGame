@@ -23,11 +23,11 @@ class Maze:
     enemy_symbols = {goblin_symbol: "goblin", boss_symbol: "boss"}
     torch_vision_range = 2
 
-    def __init__(self, maze, vision_range=2):
+    def __init__(self, maze, vision_range=2, player_name="Nyrik"):
         # deepcopy so a new game always starts with the original layout
         self.maze = copy.deepcopy(maze)
         self.vision_range = vision_range
-        self.character = game_logic.Character("Nyrik")
+        self.character = game_logic.Character(player_name)
         self.player_pos = self.check_position(self.player_symbol)
         self.reached_exit = False
         # enemies are created on first contact and remembered by position,

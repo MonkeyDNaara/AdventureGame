@@ -6,7 +6,7 @@ story_texts = {
     "part4":    "Old scratches cover the floor.\nSomething must have crossed this room many times.",
     "part5":    "The dark is restless here.",
     "torch_part":   "You picked up the torch.\nYou can now see around you. What a relief.",
-    "exit_part" :   "You made it, you found the exit! Congrats!",
+    "exit_part" :   "You made it, you found the exit! Congrats, {name}!",
     "potion"    :   "You found a potion, you pick it up and put it in your inventory.",
     "chest"     :   "You found a chest and wonder what's inside.\nYou open it and find a new item, you put it in your inventory.",
     "goblin"    :   "A Goblin jumps out of the shadows!",

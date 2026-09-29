@@ -185,3 +185,10 @@ enemy_types = {
 
 def create_enemy(enemy_type):
     return Enemy(**enemy_types[enemy_type])
+
+
+def clean_player_name(name, default="Nyrik", max_length=15):
+    name = " ".join(name.split())
+    if not name:
+        return default
+    return name[:max_length]

@@ -15,6 +15,10 @@ class TestMaze(unittest.TestCase):
     def setUp(self):
         self.maze = Maze(TEST_MAZE)
 
+    def test_player_name(self):
+        maze = Maze(TEST_MAZE, player_name="Niko")
+        self.assertEqual(maze.character.name, "Niko")
+
     def test_wall_blocks_movement(self):
         self.maze.check_action("w")
         self.assertEqual(self.maze.player_pos, (1, 1))

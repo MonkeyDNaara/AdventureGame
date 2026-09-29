@@ -1,7 +1,7 @@
 import tkinter as tk
 
 import story
-from game_logic import Fight
+from game_logic import Fight, clean_player_name
 from maze import Maze
 
 
@@ -23,6 +23,7 @@ class MainWindow:
         self.initial_maze = maze
         self.vision_range = vision_range
         self.grid_size = vision_range * 2 + 1
+        self.player_name = clean_player_name("")
 
         self.root = tk.Tk()
         self.root.title("Maze Runner")
@@ -33,6 +34,7 @@ class MainWindow:
         self.create_status_panel()
         self.create_maze_grid()
         self.create_story_label()
+        self.create_name_input()
         self.create_buttons()
         self.bind_keys()
 
@@ -108,6 +110,15 @@ class MainWindow:
         self.story_label = tk.Label(self.root, text="", font=("Arial", 16), height=7)
         self.story_label.pack(pady=10, padx=10)
 
+    def create_name_input(self):
+        self.name_frame = tk.Frame(self.root)
+        self.name_label = tk.Label(self.name_frame, text="Your name:", font=("Arial", 16))
+        self.name_label.grid(row=0, column=0, padx=5)
+        self.name_entry = tk.Entry(self.name_frame, font=("Arial", 16), width=16, justify="center")
+        self.name_entry.grid(row=0, column=1, padx=5)
+        self.name_frame.pack(pady=(0, 10))
+        self.name_entry.focus_set()
+
     def create_buttons(self):
         buttonframe = tk.Frame(self.root)
         self.attack_button = tk.Button(buttonframe, text="Attack (1)", font=("Arial", 16), command=lambda: self.fight_turn("attack"))
@@ -136,14 +147,14 @@ class MainWindow:
     # ---------- game flow ----------
 
     def new_game(self):
-        self.maze = Maze(self.initial_maze, self.vision_range)
+        self.maze = Maze(self.initial_maze, self.vision_range, self.player_name)
         self.story_happened = []
         self.stop_typing()
         self.game_started = False
         self.game_over = False
         self.fight = None
         self.clear_maze_grid()
-        self.story_label.config(text="Press Enter to start the game")
+        self.story_label.config(text="Type in your name and press Enter to start the game")
         self.update_stats()
         self.update_buttons()
 
@@ -152,10 +163,19 @@ class MainWindow:
             self.new_game()
             self.start_game()
         elif not self.game_started:
+            self.set_player_name()
             self.start_game()
+
+    def set_player_name(self):
+        # the name is only asked once, a restart keeps it
+        self.player_name = clean_player_name(self.name_entry.get())
+        self.maze.character.name = self.player_name
+        self.name_frame.pack_forget()
+        self.root.focus_set()
 
     def start_game(self):
         self.game_started = True
+        self.update_stats()
         self.update_buttons()
         self.update_maze_grid()
         self.update_story_label(self.maze.player_pos)
@@ -169,7 +189,7 @@ class MainWindow:
         if enemy:
             self.start_fight(enemy)
         elif self.maze.reached_exit:
-            self.end_game(story.story_texts["exit_part"])
+            self.end_game(story.story_texts["exit_part"].format(name=self.player_name))
         else:
             self.update_story_label(self.maze.player_pos)
 
@@ -230,7 +250,8 @@ class MainWindow:
 
     def update_stats(self):
         character = self.maze.character
-        self.char_name_label.config(text=f"Name: {character.name}")
+        name = character.name if self.game_started else "?"
+        self.char_name_label.config(text=f"Name: {name}")
         self.char_level_label.config(text=f"Level: {character.level}")
         self.char_exp_label.config(text=f"EXP: {character.exp}/{character.exp_needed()}")
         self.char_hp_label.config(text=f"HP: {character.actual_hp}/{character.hp}")

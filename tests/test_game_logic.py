@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from game_logic import Character, Fight, Item, create_enemy
+from game_logic import Character, Fight, Item, clean_player_name, create_enemy
 
 
 class TestCharacter(unittest.TestCase):
@@ -70,6 +70,17 @@ class TestFight(unittest.TestCase):
         self.fight.player_use_potion()
         self.assertEqual(self.player.actual_hp, self.player.hp)
         self.assertEqual(self.fight.round, 1)
+
+
+class TestPlayerName(unittest.TestCase):
+    def test_empty_name_uses_default(self):
+        self.assertEqual(clean_player_name("   "), "Nyrik")
+
+    def test_name_is_trimmed(self):
+        self.assertEqual(clean_player_name("  Niko   Klam "), "Niko Klam")
+
+    def test_long_name_is_cut(self):
+        self.assertEqual(len(clean_player_name("A" * 40)), 15)
 
 
 if __name__ == "__main__":
