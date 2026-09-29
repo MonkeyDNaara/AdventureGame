@@ -179,19 +179,18 @@ class MainWindow:
         self.root.bind("<q>", self.key_event)
         self.root.bind("<Enter>", self.key_event)
 
+    def run(self):
         self.root.mainloop()
-    
+
     def use_potion(self):
         self.maze.character.use_potion()
         self.update_stats()
 
     def key_event(self, event):
-        if not self.maze.character.be_infight and not self.story_ongoing == True and (event.keysym == "w" or event.keysym == "a" or event.keysym == "s" or event.keysym == "d"):
-            actual_vision_maze = self.maze.check_action(event.keysym)
-        else:
-            actual_vision_maze = self.maze.check_action()
-        self.update_label(actual_vision_maze)
-        self.update_story_label(self.maze.check_position(self.maze.maze, self.maze.player_symbol))
+        if not self.maze.character.be_infight and not self.story_ongoing and event.keysym in self.maze.directions:
+            self.maze.check_action(event.keysym)
+        self.update_label(self.maze.show_vision_maze())
+        self.update_story_label(self.maze.player_pos)
         self.update_stats()
 
     def update_stats(self):
